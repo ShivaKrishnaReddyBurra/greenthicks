@@ -2,9 +2,9 @@
 
 import axios from '@/lib/axios';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 
-export default function VerifyEmail() {
+function VerifyEmailContent() {
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
@@ -61,5 +61,13 @@ export default function VerifyEmail() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmail() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
