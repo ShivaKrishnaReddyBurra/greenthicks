@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     permissions:
-      id-token: write # Added to fix federated token issue
+      id-token: write # Enable federated token
       contents: read
     name: Build and Deploy Backend to Azure Web App
     steps:
@@ -52,12 +52,14 @@ jobs:
             !./.next
             !./node_modules
 
-      - name: Login to Azure
+      - name: Login to Azure (Federated or Service Principal)
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2EC3E7BA297C458D9B4AE1340AFBA82B }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A33CAF98ABE0470FAE22CBF3E749677C }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9BD49C206A074689944400E81B57034A }}
+          # Fallback to creds if federated fails (uncomment and set AZURE_CREDENTIALS secret if needed)
+          # creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -71,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     permissions:
-      id-token: write # Added to fix federated token issue
+      id-token: write # Enable federated token
       contents: read
     name: Build and Deploy Frontend to Azure Static Web Apps
     steps:
@@ -113,7 +115,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     permissions:
-      id-token: write # Added to fix federated token issue
+      id-token: write # Enable federated token
       contents: read
     name: Close Pull Request
     steps:
