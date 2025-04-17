@@ -48,6 +48,10 @@ jobs:
         with:
           name: node-app
 
+      - name: Wait to avoid SCM conflict
+        run: sleep 30
+        shell: bash
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
