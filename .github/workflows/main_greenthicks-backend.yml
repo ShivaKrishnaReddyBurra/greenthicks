@@ -15,6 +15,9 @@ jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    permissions:
+      id-token: write # Added to fix federated token issue
+      contents: read
     name: Build and Deploy Backend to Azure Web App
     steps:
       - uses: actions/checkout@v4
@@ -23,6 +26,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
+
+      - name: Clear node_modules
+        run: rm -rf node_modules
 
       - name: Install backend dependencies
         run: npm install --production
@@ -64,6 +70,9 @@ jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    permissions:
+      id-token: write # Added to fix federated token issue
+      contents: read
     name: Build and Deploy Frontend to Azure Static Web Apps
     steps:
       - uses: actions/checkout@v4
@@ -72,6 +81,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
+
+      - name: Clear node_modules
+        run: rm -rf node_modules
 
       - name: Install all dependencies
         run: npm install
@@ -100,6 +112,9 @@ jobs:
   close-pull-request:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    permissions:
+      id-token: write # Added to fix federated token issue
+      contents: read
     name: Close Pull Request
     steps:
       - name: Close Pull Request
