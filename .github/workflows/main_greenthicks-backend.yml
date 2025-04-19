@@ -59,9 +59,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: false
           environment: azurecloud
-          allow-no-subscriptions: false
-          audience: api://AzureADTokenExchange
-          auth-type: SERVICE_PRINCIPAL
+          auth-type: service-principal
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -116,9 +114,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: false
           environment: azurecloud
-          allow-no-subscriptions: false
-          audience: api://AzureADTokenExchange
-          auth-type: SERVICE_PRINCIPAL
+          auth-type: service-principal
 
       - name: Deploy to Azure Web App
         id: deploy
