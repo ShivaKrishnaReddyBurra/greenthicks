@@ -1,7 +1,7 @@
 'use client';
 
-import AuthForm from '@/components/AuthForm';
-import axios from '@/lib/axios';
+import AuthForm from '../../components/AuthForm';
+import axios from '../../lib/axios';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 

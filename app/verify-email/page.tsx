@@ -1,6 +1,6 @@
 'use client';
 
-import axios from '@/lib/axios';
+import axios from '../../lib/axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, Suspense } from 'react';
 
