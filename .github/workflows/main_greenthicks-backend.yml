@@ -96,8 +96,9 @@ jobs:
         with:
           name: frontend-app
           path: |
-            .
-            !./node_modules
+            .next
+            package.json
+            node_modules
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -110,7 +111,7 @@ jobs:
         with:
           app-name: 'greenthicks-backend'
           slot-name: 'Production'
-          package: .
+          package: .next
 
   close-pull-request:
     runs-on: ubuntu-latest
