@@ -1,10 +1,10 @@
 'use client';
 
-import AuthForm from '../../components/AuthForm';
-import axios from '../../lib/axios';
+import AuthForm from '@/components/AuthForm';
+import axios from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { setToken } from '../../lib/auth';
+import { setToken } from '@/lib/auth';
 
 export default function Login() {
   const [error, setError] = useState('');

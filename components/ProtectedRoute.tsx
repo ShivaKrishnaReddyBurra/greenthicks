@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { getToken, isAuthenticated } from '../lib/auth';
+import { getToken, isAuthenticated } from '@/lib/auth';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();

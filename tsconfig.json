@@ -24,9 +24,7 @@
     ],
     "baseUrl": ".",
     "paths": {
-        "@/*": ["./*"],              // Maps "@/" to the root directory
-        "@/components/*": ["components/*"],
-        "@/lib/*": ["lib/*"]
+        "@/*": ["./*"]              // Maps "@/" to the root directory
       }
   },
   "include": [
