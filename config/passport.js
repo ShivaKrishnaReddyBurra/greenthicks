@@ -1,6 +1,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/User');
+const Counter = require('../models/Counter');
 require('dotenv').config();
 
 passport.use(
@@ -14,10 +15,17 @@ passport.use(
       try {
         let user = await User.findOne({ googleId: profile.id });
         if (!user) {
+          const counter = await Counter.findOneAndUpdate(
+            { name: 'userId' },
+            { $inc: { sequence: 1 } },
+            { new: true, upsert: true }
+          );
+
           user = new User({
+            globalId: counter.sequence,
             googleId: profile.id,
             email: profile.emails[0].value,
-            isVerified: true, // Google users are auto-verified
+            isAdmin: false,
           });
           await user.save();
         }
@@ -29,9 +37,9 @@ passport.use(
   )
 );
 
-passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser(async (id, done) => {
-  const user = await User.findById(id);
+passport.serializeUser((user, done) => done(null, user.globalId));
+passport.deserializeUser(async (globalId, done) => {
+  const user = await User.findOne({ globalId });
   done(null, user);
 });
 
