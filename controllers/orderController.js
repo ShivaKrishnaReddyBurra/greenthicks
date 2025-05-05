@@ -3,13 +3,11 @@ const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const Cart = require('../models/Cart');
 const Counter = require('../models/Counter');
 
 const createOrder = [
   // Validate request body
-  body('items').isArray({ min: 1 }).withMessage('At least one item is required'),
-  body('items.*.productId').isInt({ min: 1 }).withMessage('Invalid product ID'),
-  body('items.*.quantity').isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
   body('paymentMethod').isIn(['credit-card', 'upi', 'cash-on-delivery']).withMessage('Invalid payment method'),
   body('shippingAddress.firstName').notEmpty().trim().withMessage('First name is required'),
   body('shippingAddress.lastName').notEmpty().trim().withMessage('Last name is required'),
@@ -23,7 +21,7 @@ const createOrder = [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { items, paymentMethod, shippingAddress, couponCode } = req.body;
+    const { paymentMethod, shippingAddress, couponCode } = req.body;
     const userId = req.user.id; // From authenticate middleware
 
     const session = await mongoose.startSession();
@@ -37,8 +35,15 @@ const createOrder = [
         return res.status(404).json({ message: 'User not found' });
       }
 
+      // Fetch cart
+      const cart = await Cart.findOne({ userId }).session(session);
+      if (!cart || cart.items.length === 0) {
+        await session.abortTransaction();
+        return res.status(400).json({ message: 'Cart is empty' });
+      }
+
       // Validate products and stock
-      const productIds = items.map(item => item.productId);
+      const productIds = cart.items.map(item => item.productId);
       const products = await Product.find({ globalId: { $in: productIds } }).session(session);
       if (products.length !== productIds.length) {
         await session.abortTransaction();
@@ -48,7 +53,7 @@ const createOrder = [
 
       // Prepare order items and check stock
       let subtotal = 0;
-      const orderItems = items.map(item => {
+      const orderItems = cart.items.map(item => {
         const product = products.find(p => p.globalId === item.productId);
         if (!product) throw new Error(`Product with ID ${item.productId} not found`);
         if (product.stock < item.quantity) {
@@ -86,7 +91,7 @@ const createOrder = [
         { upsert: true, new: true, session }
       );
 
-      // Create order using static method instead of pre-save hook
+      // Create order using static method
       const orderData = {
         userId,
         items: orderItems,
@@ -101,16 +106,11 @@ const createOrder = [
         orderDate: new Date()
       };
 
-      // Use the createNewOrder static method to generate globalId before saving
       const order = await Order.createNewOrder(orderData, session);
-      console.log('Order before save:', JSON.stringify(order, null, 2));
-      
       await order.save({ session });
-      
-      console.log('Order after save:', JSON.stringify(order, null, 2));
 
       // Update product stock
-      const stockUpdates = items.map(item => ({
+      const stockUpdates = cart.items.map(item => ({
         updateOne: {
           filter: { globalId: item.productId },
           update: { $inc: { stock: -item.quantity } },
@@ -122,6 +122,10 @@ const createOrder = [
       user.totalOrders += 1;
       user.totalSpent += total;
       await user.save({ session });
+
+      // Clear the cart
+      cart.items = [];
+      await cart.save({ session });
 
       await session.commitTransaction();
       res.status(201).json({ message: 'Order created successfully', order });
