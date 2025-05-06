@@ -25,7 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
-app.get('/api/test', (req, res) => {
+app.get('/api/greenthicks', (req, res) => {
   res.json({ message: 'API is working' });
 }
 );
