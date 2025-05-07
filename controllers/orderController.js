@@ -5,34 +5,36 @@ const User = require('../models/User');
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 const Counter = require('../models/Counter');
+const Coupon = require('../models/Coupon');
 
 const createOrder = [
   // Validate request body
   body('paymentMethod').isIn(['credit-card', 'upi', 'cash-on-delivery']).withMessage('Invalid payment method'),
-  body('shippingAddress.firstName').notEmpty().trim().withMessage('First name is required'),
-  body('shippingAddress.lastName').notEmpty().trim().withMessage('Last name is required'),
-  body('shippingAddress.address').notEmpty().trim().withMessage('Address is required'),
-  body('shippingAddress.city').notEmpty().trim().withMessage('City is required'),
-  body('shippingAddress.state').notEmpty().trim().withMessage('State is required'),
-  body('shippingAddress.zipCode').notEmpty().trim().withMessage('ZIP code is required'),
+  body('addressId').isInt({ min: 1 }).withMessage('Invalid address ID'),
   body('couponCode').optional().trim(),
 
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { paymentMethod, shippingAddress, couponCode } = req.body;
-    const userId = req.user.id; // From authenticate middleware
+    const { paymentMethod, addressId, couponCode } = req.body;
+    const userId = req.user.id;
 
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-      // Fetch user
+      // Fetch user and validate address
       const user = await User.findOne({ globalId: userId }).session(session);
       if (!user) {
         await session.abortTransaction();
         return res.status(404).json({ message: 'User not found' });
+      }
+
+      const address = user.addresses.find(addr => addr.addressId === addressId);
+      if (!address) {
+        await session.abortTransaction();
+        return res.status(400).json({ message: 'Address not found' });
       }
 
       // Fetch cart
@@ -72,15 +74,25 @@ const createOrder = [
       // Calculate shipping and discount
       const shipping = subtotal > 50 ? 0 : 5.99;
       let discount = 0;
+      let appliedCoupon = null;
       if (couponCode) {
-        if (couponCode.toLowerCase() === 'fresh20') {
-          discount = subtotal * 0.2;
-        } else if (couponCode.toLowerCase() === 'freeship') {
-          discount = shipping;
-        } else {
+        const coupon = await Coupon.findOne({ code: couponCode.toLowerCase(), active: true }).session(session);
+        if (!coupon || coupon.expiryDate < new Date()) {
           await session.abortTransaction();
-          return res.status(400).json({ message: 'Invalid coupon code' });
+          return res.status(400).json({ message: 'Invalid or expired coupon code' });
         }
+        if (coupon.minimumOrderAmount > subtotal) {
+          await session.abortTransaction();
+          return res.status(400).json({ message: `Minimum order amount for coupon is ${coupon.minimumOrderAmount}` });
+        }
+        if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses) {
+          await session.abortTransaction();
+          return res.status(400).json({ message: 'Coupon usage limit reached' });
+        }
+        discount = coupon.discountType === 'percentage'
+          ? subtotal * (coupon.discountValue / 100)
+          : coupon.discountValue;
+        appliedCoupon = coupon;
       }
       const total = subtotal + shipping - discount;
 
@@ -91,7 +103,7 @@ const createOrder = [
         { upsert: true, new: true, session }
       );
 
-      // Create order using static method
+      // Create order
       const orderData = {
         userId,
         items: orderItems,
@@ -101,9 +113,17 @@ const createOrder = [
         total,
         couponCode: couponCode || '',
         paymentMethod,
-        shippingAddress,
-        paymentStatus: paymentMethod === 'cash-on-delivery' ? 'pending' : 'completed',
-        orderDate: new Date()
+        paymentStatus: paymentMethod === 'cash-on-delivery' ? 'pending' : 'pending',
+        shippingAddress: {
+          firstName: address.firstName,
+          lastName: address.lastName,
+          address: address.address,
+          city: address.city,
+          state: address.state,
+          zipCode: address.zipCode,
+          location: address.location,
+        },
+        orderDate: new Date(),
       };
 
       const order = await Order.createNewOrder(orderData, session);
@@ -123,6 +143,12 @@ const createOrder = [
       user.totalSpent += total;
       await user.save({ session });
 
+      // Update coupon usage
+      if (appliedCoupon) {
+        appliedCoupon.usedCount += 1;
+        await appliedCoupon.save({ session });
+      }
+
       // Clear the cart
       cart.items = [];
       await cart.save({ session });
@@ -141,8 +167,21 @@ const createOrder = [
 
 const getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.user.id }).sort({ orderDate: -1 });
-    res.json(orders);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const orders = await Order.find({ userId: req.user.id })
+      .sort({ orderDate: -1 })
+      .skip(skip)
+      .limit(limit);
+    const totalOrders = await Order.countDocuments({ userId: req.user.id });
+
+    res.json({
+      orders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+    });
   } catch (error) {
     console.error('Get user orders error:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -175,8 +214,21 @@ const getAllOrders = async (req, res) => {
     if (!req.user.isAdmin) {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
-    const orders = await Order.find().sort({ orderDate: -1 });
-    res.json(orders);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const orders = await Order.find()
+      .sort({ orderDate: -1 })
+      .skip(skip)
+      .limit(limit);
+    const totalOrders = await Order.countDocuments();
+
+    res.json({
+      orders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+    });
   } catch (error) {
     console.error('Get all orders error:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -203,7 +255,6 @@ const updateOrderStatus = [
         return res.status(404).json({ message: 'Order not found' });
       }
 
-      // If cancelling, restore stock
       if (req.body.status === 'cancelled' && order.status !== 'cancelled') {
         const stockUpdates = order.items.map(item => ({
           updateOne: {
@@ -212,6 +263,14 @@ const updateOrderStatus = [
           },
         }));
         await Product.bulkWrite(stockUpdates, { session });
+
+        if (order.couponCode) {
+          const coupon = await Coupon.findOne({ code: order.couponCode.toLowerCase() }).session(session);
+          if (coupon) {
+            coupon.usedCount = Math.max(0, coupon.usedCount - 1);
+            await coupon.save({ session });
+          }
+        }
       }
 
       order.status = req.body.status;
@@ -230,4 +289,46 @@ const updateOrderStatus = [
   },
 ];
 
-module.exports = { createOrder, getUserOrders, getOrder, getAllOrders, updateOrderStatus };
+const exportOrders = async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: 'Unauthorized: Admin access required' });
+    }
+
+    const orders = await Order.find().lean();
+
+    const csvWriter = createCsvWriter({
+      header: [
+        { id: 'id', title: 'Order ID' },
+        { id: 'userId', title: 'User ID' },
+        { id: 'orderDate', title: 'Order Date' },
+        { id: 'total', title: 'Total Amount' },
+        { id: 'status', title: 'Status' },
+        { id: 'shippingAddress', title: 'Shipping Address' },
+        { id: 'items', title: 'Items' },
+      ],
+      fieldDelimiter: ',',
+    });
+
+    const records = orders.map(order => ({
+      id: order.id,
+      userId: order.userId,
+      orderDate: new Date(order.orderDate).toISOString(),
+      total: order.total,
+      status: order.status,
+      shippingAddress: `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}, ${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state}, ${order.shippingAddress.zipCode}`,
+      items: order.items.map(item => `${item.name} (Qty: ${item.quantity}, Price: ${item.price})`).join('; '),
+    }));
+
+    const csvData = csvWriter.getHeaderString() + csvWriter.stringifyRecords(records);
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=orders_export.csv');
+    res.status(200).send(csvData);
+  } catch (error) {
+    console.error('Export orders error:', error.message);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { createOrder, getUserOrders, getOrder, getAllOrders, updateOrderStatus, exportOrders };

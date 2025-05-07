@@ -6,6 +6,11 @@ const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const cartRoutes = require('./routes/cart');
+// const paymentRoutes = require('./routes/payments');
+const addressRoutes = require('./routes/addresses');
+const couponRoutes = require('./routes/coupons');
+const invoiceRoutes = require('./routes/invoices');
+
 require('dotenv').config();
 
 const app = express();
@@ -25,10 +30,13 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
+// app.use('/api/payments', paymentRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/invoices', invoiceRoutes);
 app.get('/api/greenthicks', (req, res) => {
   res.json({ message: 'API is working' });
-}
-);
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

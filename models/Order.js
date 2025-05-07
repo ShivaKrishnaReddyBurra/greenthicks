@@ -19,6 +19,8 @@ const orderSchema = new mongoose.Schema({
   couponCode: { type: String, default: '' },
   paymentMethod: { type: String, required: true, enum: ['credit-card', 'upi', 'cash-on-delivery'] },
   paymentStatus: { type: String, default: 'pending', enum: ['pending', 'completed', 'failed'] },
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
   shippingAddress: {
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },

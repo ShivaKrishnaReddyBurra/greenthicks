@@ -1,8 +1,10 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Counter = require('../models/Counter');
+const Cart = require('../models/Cart');
+const Order = require('../models/Order');
 const { sendWelcomeEmail } = require('../services/emailService');
 
 const signup = [
@@ -190,6 +192,78 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+const getUserDetails = [
+  param('globalId').isInt({ min: 1 }).withMessage('Invalid user ID'),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const globalId = parseInt(req.params.globalId);
+    const requestingUser = req.user;
+
+    try {
+      // Check authorization: only admin or the user themselves can access
+      if (requestingUser.id !== globalId && !requestingUser.isAdmin) {
+        return res.status(403).json({ message: 'Unauthorized to view this user\'s details' });
+      }
+
+      // Fetch user details
+      const user = await User.findOne({ globalId }).select('-password -googleId');
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      // Fetch cart
+      const cart = await Cart.findOne({ userId: globalId }) || { userId: globalId, items: [] };
+
+      // Fetch orders with pagination
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const orders = await Order.find({ userId: globalId })
+        .sort({ orderDate: -1 })
+        .skip(skip)
+        .limit(limit);
+      const totalOrders = await Order.countDocuments({ userId: globalId });
+
+      // Prepare response
+      const userDetails = {
+        globalId: user.globalId,
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        address: user.address,
+        city: user.city,
+        state: user.state,
+        zipCode: user.zipCode,
+        name: user.name,
+        location: user.location,
+        totalOrders: user.totalOrders,
+        totalSpent: user.totalSpent,
+        status: user.status,
+        joinedDate: user.joinedDate,
+        isAdmin: user.isAdmin,
+        addresses: user.addresses,
+        cart: {
+          items: cart.items,
+          updatedAt: cart.updatedAt,
+        },
+        orders: {
+          data: orders,
+          totalPages: Math.ceil(totalOrders / limit),
+          currentPage: page,
+        },
+      };
+
+      res.json(userDetails);
+    } catch (error) {
+      console.error('Get user details error:', error.message);
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
+  },
+];
+
 const deleteUser = async (req, res) => {
   const globalId = parseInt(req.params.globalId);
   const requestingUser = req.user;
@@ -210,4 +284,4 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, updateUser, getAllUsers, getUserProfile, deleteUser };
+module.exports = { signup, login, updateUser, getAllUsers, getUserProfile, getUserDetails, deleteUser };
