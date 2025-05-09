@@ -3,3 +3,4 @@ node_modules/
 .next
 out
 migrateUsers.js
+migrateAddressesAndOrders.js

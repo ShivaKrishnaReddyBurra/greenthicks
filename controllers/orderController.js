@@ -6,6 +6,8 @@ const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 const Counter = require('../models/Counter');
 const Coupon = require('../models/Coupon');
+const ServiceArea = require('../models/ServiceArea');
+const { notifyOnOrderPlaced } = require('./notificationController');
 
 const createOrder = [
   // Validate request body
@@ -35,6 +37,13 @@ const createOrder = [
       if (!address) {
         await session.abortTransaction();
         return res.status(400).json({ message: 'Address not found' });
+      }
+
+      // Check if service is available in the pincode
+      const serviceArea = await ServiceArea.findOne({ pincode: address.zipCode, isActive: true }).session(session);
+      if (!serviceArea) {
+        await session.abortTransaction();
+        return res.status(400).json({ message: 'Service not available in this area' });
       }
 
       // Fetch cart
@@ -121,6 +130,8 @@ const createOrder = [
           city: address.city,
           state: address.state,
           zipCode: address.zipCode,
+          email: address.email,
+          phone: address.phone,
           location: address.location,
         },
         orderDate: new Date(),
@@ -152,6 +163,9 @@ const createOrder = [
       // Clear the cart
       cart.items = [];
       await cart.save({ session });
+
+      // Notify user and admins
+      await notifyOnOrderPlaced(order, session);
 
       await session.commitTransaction();
       res.status(201).json({ message: 'Order created successfully', order });
@@ -297,7 +311,7 @@ const exportOrders = async (req, res) => {
 
     const orders = await Order.find().lean();
 
-    const csvWriter = createCsvWriter({
+    const csvWriter = require('csv-writer').createObjectCsvStringifier({
       header: [
         { id: 'id', title: 'Order ID' },
         { id: 'userId', title: 'User ID' },

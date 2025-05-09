@@ -28,12 +28,25 @@ const orderSchema = new mongoose.Schema({
     city: { type: String, required: true },
     state: { type: String, required: true },
     zipCode: { type: String, required: true },
+    email: { type: String, required: true }, // Added for address-specific email
+    phone: { type: String, required: true }, // Added for address-specific phone
     location: {
       latitude: { type: Number },
       longitude: { type: Number },
     },
   },
   status: { type: String, default: 'processing', enum: ['processing', 'shipped', 'delivered', 'cancelled'] },
+  deliveryBoyId: { type: Number }, // References User.globalId of delivery boy
+  deliveryStatus: { 
+    type: String, 
+    default: 'pending', 
+    enum: ['pending', 'assigned', 'out-for-delivery', 'delivered'] 
+  },
+  deliveryUpdates: [{
+    status: { type: String, enum: ['pending', 'assigned', 'out-for-delivery', 'delivered'] },
+    timestamp: { type: Date, default: Date.now },
+    updatedBy: { type: Number }, // References User.globalId
+  }],
   orderDate: { type: Date, default: Date.now },
   deliveryDate: { type: Date },
   createdAt: { type: Date, default: Date.now },

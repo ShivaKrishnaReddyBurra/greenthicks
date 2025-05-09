@@ -84,11 +84,12 @@ const updateUser = [
   body('state').optional().trim(),
   body('zipCode').optional().trim(),
   body('isAdmin').optional().isBoolean(),
+  body('isDeliveryBoy').optional().isBoolean(), // Allow updating delivery boy role
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { email, password, firstName, lastName, phone, address, city, state, zipCode, isAdmin } = req.body;
+    const { email, password, firstName, lastName, phone, address, city, state, zipCode, isAdmin, isDeliveryBoy } = req.body;
     const globalId = parseInt(req.params.globalId);
     const requestingUser = req.user;
 
@@ -116,6 +117,7 @@ const updateUser = [
       if (state !== undefined) user.state = state;
       if (zipCode !== undefined) user.zipCode = zipCode;
       if (isAdmin !== undefined && requestingUser.isAdmin) user.isAdmin = isAdmin;
+      if (isDeliveryBoy !== undefined && requestingUser.isAdmin) user.isDeliveryBoy = isDeliveryBoy;
 
       await user.save();
 
@@ -138,7 +140,8 @@ const updateUser = [
           totalSpent: user.totalSpent,
           status: user.status,
           joinedDate: user.joinedDate,
-          isAdmin: user.isAdmin
+          isAdmin: user.isAdmin,
+          isDeliveryBoy: user.isDeliveryBoy
         }
       });
     } catch (error) {
@@ -184,7 +187,8 @@ const getUserProfile = async (req, res) => {
       totalSpent: user.totalSpent,
       status: user.status,
       joinedDate: user.joinedDate,
-      isAdmin: user.isAdmin
+      isAdmin: user.isAdmin,
+      isDeliveryBoy: user.isDeliveryBoy
     });
   } catch (error) {
     console.error('Get user profile error:', error.message);
@@ -244,6 +248,7 @@ const getUserDetails = [
         status: user.status,
         joinedDate: user.joinedDate,
         isAdmin: user.isAdmin,
+        isDeliveryBoy: user.isDeliveryBoy,
         addresses: user.addresses,
         cart: {
           items: cart.items,
@@ -269,7 +274,7 @@ const deleteUser = async (req, res) => {
   const requestingUser = req.user;
 
   try {
-    if (!requestingUser.isAdmin) {
+    if (!req.user.isAdmin) {
       return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     }
 

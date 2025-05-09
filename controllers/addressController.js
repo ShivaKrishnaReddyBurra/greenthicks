@@ -9,13 +9,17 @@ const addAddress = [
   body('address').notEmpty().trim().withMessage('Address is required'),
   body('city').notEmpty().trim().withMessage('City is required'),
   body('state').notEmpty().trim().withMessage('State is required'),
-  body('zipCode').notEmpty().trim().withMessage('ZIP code is required'),
+  body('zipCode').matches(/^\d{5,6}$/).withMessage('ZIP code must be 5 or 6 digits'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('phone').matches(/^\+\d{10,12}$/).withMessage('Phone number must be in international format (e.g., +12345678901)'),
   body('isPrimary').optional().isBoolean().withMessage('isPrimary must be a boolean'),
+  body('location.latitude').optional().isFloat({ min: -90, max: 90 }).withMessage('Invalid latitude'),
+  body('location.longitude').optional().isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { firstName, lastName, address, city, state, zipCode, isPrimary, location } = req.body;
+    const { firstName, lastName, address, city, state, zipCode, email, phone, isPrimary, location } = req.body;
     const userId = req.user.id;
 
     const session = await mongoose.startSession();
@@ -43,6 +47,8 @@ const addAddress = [
         city,
         state,
         zipCode,
+        email,
+        phone,
         location: location || {},
         isPrimary: isPrimary || false,
       };
@@ -74,13 +80,17 @@ const updateAddress = [
   body('address').optional().notEmpty().trim().withMessage('Address cannot be empty'),
   body('city').optional().notEmpty().trim().withMessage('City cannot be empty'),
   body('state').optional().notEmpty().trim().withMessage('State cannot be empty'),
-  body('zipCode').optional().notEmpty().trim().withMessage('ZIP code cannot be empty'),
+  body('zipCode').optional().matches(/^\d{5,6}$/).withMessage('ZIP code must be 5 or 6 digits'),
+  body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('phone').optional().matches(/^\+\d{10,12}$/).withMessage('Phone number must be in international format (e.g., +12345678901)'),
   body('isPrimary').optional().isBoolean().withMessage('isPrimary must be a boolean'),
+  body('location.latitude').optional().isFloat({ min: -90, max: 90 }).withMessage('Invalid latitude'),
+  body('location.longitude').optional().isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { firstName, lastName, address, city, state, zipCode, isPrimary, location } = req.body;
+    const { firstName, lastName, address, city, state, zipCode, email, phone, isPrimary, location } = req.body;
     const addressId = parseInt(req.params.addressId);
     const userId = req.user.id;
 
@@ -107,6 +117,8 @@ const updateAddress = [
       if (city) targetAddress.city = city;
       if (state) targetAddress.state = state;
       if (zipCode) targetAddress.zipCode = zipCode;
+      if (email) targetAddress.email = email;
+      if (phone) targetAddress.phone = phone;
       if (location) targetAddress.location = location;
       if (isPrimary !== undefined) {
         if (isPrimary) {

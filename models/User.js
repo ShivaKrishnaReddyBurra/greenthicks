@@ -14,18 +14,24 @@ const userSchema = new mongoose.Schema({
     city: { type: String, required: true },
     state: { type: String, required: true },
     zipCode: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true },
     location: {
       latitude: { type: Number },
       longitude: { type: Number },
     },
     isPrimary: { type: Boolean, default: false },
   }],
-  name: { type: String }, // Computed from firstName + lastName of primary address
-  location: { type: String }, // Computed from city of primary address
+  name: { type: String },
+  location: { type: String },
   totalOrders: { type: Number, default: 0 },
   totalSpent: { type: Number, default: 0 },
   status: { type: String, default: 'active' },
   isAdmin: { type: Boolean, default: false },
+  isDeliveryBoy: { type: Boolean, default: false },
+  activeStatus: { type: Boolean, default: true }, // Tracks online/offline status
+  ordersDelivered: { type: Number, default: 0 }, // Tracks number of delivered orders
+  phone: { type: String },
   createdAt: { type: Date, default: Date.now },
   joinedDate: { type: String, default: new Date().toISOString().split('T')[0] },
 });
@@ -33,7 +39,6 @@ const userSchema = new mongoose.Schema({
 // Pre-save hook to generate id and computed fields
 userSchema.pre('save', async function(next) {
   if (this.isNew) {
-    // Generate USR-XXX format ID
     const counter = await mongoose.model('Counter').findOneAndUpdate(
       { name: 'userId' },
       { $inc: { sequence: 1 } },
@@ -42,7 +47,6 @@ userSchema.pre('save', async function(next) {
     this.id = `USR-${String(counter.sequence).padStart(3, '0')}`;
   }
   
-  // Compute name and location from primary address
   const primaryAddress = this.addresses.find(addr => addr.isPrimary);
   if (primaryAddress) {
     this.name = `${primaryAddress.firstName} ${primaryAddress.lastName}`.trim();
@@ -52,10 +56,13 @@ userSchema.pre('save', async function(next) {
     this.location = this.addresses[0].city;
   }
   
-  // Ensure only one primary address
   const primaryAddresses = this.addresses.filter(addr => addr.isPrimary);
   if (primaryAddresses.length > 1) {
     primaryAddresses.slice(1).forEach(addr => (addr.isPrimary = false));
+  }
+  
+  if (this.isAdmin && this.isDeliveryBoy === false) {
+    this.isDeliveryBoy = true;
   }
   
   next();

@@ -6,10 +6,11 @@ const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const cartRoutes = require('./routes/cart');
-// const paymentRoutes = require('./routes/payments');
 const addressRoutes = require('./routes/addresses');
 const couponRoutes = require('./routes/coupons');
 const invoiceRoutes = require('./routes/invoices');
+const deliveryRoutes = require('./routes/delivery');
+const serviceAreaRoutes = require('./routes/serviceAreas');
 
 require('dotenv').config();
 
@@ -30,10 +31,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
-// app.use('/api/payments', paymentRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/delivery', deliveryRoutes);
+app.use('/api/service-areas', serviceAreaRoutes);
 app.get('/api/greenthicks', (req, res) => {
   res.json({ message: 'API is working' });
 });
