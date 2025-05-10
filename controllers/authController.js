@@ -8,17 +8,24 @@ const Order = require('../models/Order');
 const { sendWelcomeEmail } = require('../services/emailService');
 
 const signup = [
-  body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 }),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('firstName').notEmpty().trim().withMessage('First name is required'),
+  body('lastName').notEmpty().trim().withMessage('Last name is required'),
+  body('username').notEmpty().trim().withMessage('Username is required'),
+  body('isAdmin').optional().isBoolean().withMessage('isAdmin must be a boolean'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { email, password } = req.body;
+    const { email, password, firstName, lastName, username, isAdmin } = req.body;
 
     try {
       let user = await User.findOne({ email });
-      if (user) return res.status(400).json({ message: 'User already exists' });
+      if (user) return res.status(400).json({ message: 'Email already exists' });
+
+      user = await User.findOne({ username });
+      if (user) return res.status(400).json({ message: 'Username already exists' });
 
       const counter = await Counter.findOneAndUpdate(
         { name: 'userId' },
@@ -30,6 +37,10 @@ const signup = [
         globalId: counter.sequence,
         email,
         password: await bcrypt.hash(password, 10),
+        firstName,
+        lastName,
+        username,
+        isAdmin: isAdmin || false,
       });
       await user.save();
       await sendWelcomeEmail(email);
@@ -43,32 +54,39 @@ const signup = [
 ];
 
 const login = [
-  body('email').isEmail().normalizeEmail(),
-  body('password').notEmpty(),
+  body('identifier').notEmpty().trim().withMessage('Username or email is required'),
+  body('password').notEmpty().withMessage('Password is required'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
     try {
-      const user = await User.findOne({ email });
+      const user = await User.findOne({
+        $or: [{ email: identifier }, { username: identifier }],
+      });
       if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
       const token = jwt.sign({ id: user.globalId, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '7d' });
-      res.json({ token, user: {
-        globalId: user.globalId,
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        isAdmin: user.isAdmin
-      }});
+      res.json({
+        token,
+        user: {
+          globalId: user.globalId,
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
+          isAdmin: user.isAdmin,
+        },
+      });
     } catch (error) {
-      res.status(500).json({ message: 'Server error' });
+      console.error('Login error:', error.message);
+      res.status(500).json({ message: 'Server error', error: error.message });
     }
   },
 ];
@@ -78,18 +96,19 @@ const updateUser = [
   body('password').optional().isLength({ min: 6 }),
   body('firstName').optional().trim(),
   body('lastName').optional().trim(),
+  body('username').optional().trim(),
   body('phone').optional().trim(),
   body('address').optional().trim(),
   body('city').optional().trim(),
   body('state').optional().trim(),
   body('zipCode').optional().trim(),
   body('isAdmin').optional().isBoolean(),
-  body('isDeliveryBoy').optional().isBoolean(), // Allow updating delivery boy role
+  body('isDeliveryBoy').optional().isBoolean(),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { email, password, firstName, lastName, phone, address, city, state, zipCode, isAdmin, isDeliveryBoy } = req.body;
+    const { email, password, firstName, lastName, username, phone, address, city, state, zipCode, isAdmin, isDeliveryBoy } = req.body;
     const globalId = parseInt(req.params.globalId);
     const requestingUser = req.user;
 
@@ -107,6 +126,13 @@ const updateUser = [
           return res.status(400).json({ message: 'Email already in use' });
         }
         user.email = email;
+      }
+      if (username) {
+        const existingUser = await User.findOne({ username });
+        if (existingUser && existingUser.globalId !== globalId) {
+          return res.status(400).json({ message: 'Username already in use' });
+        }
+        user.username = username;
       }
       if (password) user.password = await bcrypt.hash(password, 10);
       if (firstName !== undefined) user.firstName = firstName;
@@ -129,6 +155,7 @@ const updateUser = [
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          username: user.username,
           phone: user.phone,
           address: user.address,
           city: user.city,
@@ -176,6 +203,7 @@ const getUserProfile = async (req, res) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      username: user.username,
       phone: user.phone,
       address: user.address,
       city: user.city,
@@ -206,19 +234,15 @@ const getUserDetails = [
     const requestingUser = req.user;
 
     try {
-      // Check authorization: only admin or the user themselves can access
       if (requestingUser.id !== globalId && !requestingUser.isAdmin) {
         return res.status(403).json({ message: 'Unauthorized to view this user\'s details' });
       }
 
-      // Fetch user details
       const user = await User.findOne({ globalId }).select('-password -googleId');
       if (!user) return res.status(404).json({ message: 'User not found' });
 
-      // Fetch cart
       const cart = await Cart.findOne({ userId: globalId }) || { userId: globalId, items: [] };
 
-      // Fetch orders with pagination
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
@@ -229,13 +253,13 @@ const getUserDetails = [
         .limit(limit);
       const totalOrders = await Order.countDocuments({ userId: globalId });
 
-      // Prepare response
       const userDetails = {
         globalId: user.globalId,
         id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        username: user.username,
         phone: user.phone,
         address: user.address,
         city: user.city,

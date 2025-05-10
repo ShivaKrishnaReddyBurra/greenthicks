@@ -11,6 +11,7 @@ const couponRoutes = require('./routes/coupons');
 const invoiceRoutes = require('./routes/invoices');
 const deliveryRoutes = require('./routes/delivery');
 const serviceAreaRoutes = require('./routes/serviceAreas');
+const favoritesRoutes = require('./routes/favorites');
 
 require('dotenv').config();
 
@@ -36,6 +37,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/delivery', deliveryRoutes);
 app.use('/api/service-areas', serviceAreaRoutes);
+app.use('/api/favorites', favoritesRoutes);
 app.get('/api/greenthicks', (req, res) => {
   res.json({ message: 'API is working' });
 });

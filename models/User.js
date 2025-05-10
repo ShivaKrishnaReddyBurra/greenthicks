@@ -6,6 +6,9 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String },
   googleId: { type: String },
+  firstName: { type: String },
+  lastName: { type: String },
+  username: { type: String, unique: true, sparse: true },
   addresses: [{
     addressId: { type: Number, required: true },
     firstName: { type: String, required: true },
@@ -29,8 +32,8 @@ const userSchema = new mongoose.Schema({
   status: { type: String, default: 'active' },
   isAdmin: { type: Boolean, default: false },
   isDeliveryBoy: { type: Boolean, default: false },
-  activeStatus: { type: Boolean, default: true }, // Tracks online/offline status
-  ordersDelivered: { type: Number, default: 0 }, // Tracks number of delivered orders
+  activeStatus: { type: Boolean, default: true },
+  ordersDelivered: { type: Number, default: 0 },
   phone: { type: String },
   createdAt: { type: Date, default: Date.now },
   joinedDate: { type: String, default: new Date().toISOString().split('T')[0] },
@@ -47,13 +50,18 @@ userSchema.pre('save', async function(next) {
     this.id = `USR-${String(counter.sequence).padStart(3, '0')}`;
   }
   
-  const primaryAddress = this.addresses.find(addr => addr.isPrimary);
-  if (primaryAddress) {
-    this.name = `${primaryAddress.firstName} ${primaryAddress.lastName}`.trim();
-    this.location = primaryAddress.city;
-  } else if (this.addresses.length > 0) {
-    this.name = `${this.addresses[0].firstName} ${this.addresses[0].lastName}`.trim();
-    this.location = this.addresses[0].city;
+  // Compute name from firstName and lastName if available, else from addresses
+  if (this.firstName && this.lastName) {
+    this.name = `${this.firstName} ${this.lastName}`.trim();
+  } else {
+    const primaryAddress = this.addresses.find(addr => addr.isPrimary);
+    if (primaryAddress) {
+      this.name = `${primaryAddress.firstName} ${primaryAddress.lastName}`.trim();
+      this.location = primaryAddress.city;
+    } else if (this.addresses.length > 0) {
+      this.name = `${this.addresses[0].firstName} ${this.addresses[0].lastName}`.trim();
+      this.location = this.addresses[0].city;
+    }
   }
   
   const primaryAddresses = this.addresses.filter(addr => addr.isPrimary);
