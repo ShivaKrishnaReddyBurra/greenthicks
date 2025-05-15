@@ -7,14 +7,13 @@ const Cart = require('../models/Cart');
 const Counter = require('../models/Counter');
 const Coupon = require('../models/Coupon');
 const ServiceArea = require('../models/ServiceArea');
-const { notifyOnOrderPlaced } = require('./notificationController');
+const { notifyOnOrderPlaced, notifyOnOrderCancelled } = require('./notificationController');
+const { updateDeliveryStatus } = require('./deliveryController');
 
 const createOrder = [
-  // Validate request body
   body('paymentMethod').isIn(['credit-card', 'upi', 'cash-on-delivery']).withMessage('Invalid payment method'),
   body('addressId').isInt({ min: 1 }).withMessage('Invalid address ID'),
   body('couponCode').optional().trim(),
-
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -26,7 +25,6 @@ const createOrder = [
     session.startTransaction();
 
     try {
-      // Fetch user and validate address
       const user = await User.findOne({ globalId: userId }).session(session);
       if (!user) {
         await session.abortTransaction();
@@ -39,21 +37,18 @@ const createOrder = [
         return res.status(400).json({ message: 'Address not found' });
       }
 
-      // Check if service is available in the pincode
       const serviceArea = await ServiceArea.findOne({ pincode: address.zipCode, isActive: true }).session(session);
       if (!serviceArea) {
         await session.abortTransaction();
         return res.status(400).json({ message: 'Service not available in this area' });
       }
 
-      // Fetch cart
       const cart = await Cart.findOne({ userId }).session(session);
       if (!cart || cart.items.length === 0) {
         await session.abortTransaction();
         return res.status(400).json({ message: 'Cart is empty' });
       }
 
-      // Validate products and stock
       const productIds = cart.items.map(item => item.productId);
       const products = await Product.find({ globalId: { $in: productIds } }).session(session);
       if (products.length !== productIds.length) {
@@ -62,7 +57,6 @@ const createOrder = [
         return res.status(400).json({ message: `Products not found: ${missingIds.join(', ')}` });
       }
 
-      // Prepare order items and check stock
       let subtotal = 0;
       const orderItems = cart.items.map(item => {
         const product = products.find(p => p.globalId === item.productId);
@@ -80,7 +74,6 @@ const createOrder = [
         };
       });
 
-      // Calculate shipping and discount
       const shipping = subtotal > 50 ? 0 : 5.99;
       let discount = 0;
       let appliedCoupon = null;
@@ -105,14 +98,12 @@ const createOrder = [
       }
       const total = subtotal + shipping - discount;
 
-      // Initialize Counter if needed
       await Counter.findOneAndUpdate(
         { name: 'orderId' },
         { $setOnInsert: { sequence: 0 } },
         { upsert: true, new: true, session }
       );
 
-      // Create order
       const orderData = {
         userId,
         items: orderItems,
@@ -140,7 +131,6 @@ const createOrder = [
       const order = await Order.createNewOrder(orderData, session);
       await order.save({ session });
 
-      // Update product stock
       const stockUpdates = cart.items.map(item => ({
         updateOne: {
           filter: { globalId: item.productId },
@@ -149,22 +139,18 @@ const createOrder = [
       }));
       await Product.bulkWrite(stockUpdates, { session });
 
-      // Update user stats
       user.totalOrders += 1;
       user.totalSpent += total;
       await user.save({ session });
 
-      // Update coupon usage
       if (appliedCoupon) {
         appliedCoupon.usedCount += 1;
         await appliedCoupon.save({ session });
       }
 
-      // Clear the cart
       cart.items = [];
       await cart.save({ session });
 
-      // Notify user and admins
       await notifyOnOrderPlaced(order, session);
 
       await session.commitTransaction();
@@ -172,6 +158,78 @@ const createOrder = [
     } catch (error) {
       await session.abortTransaction();
       console.error('Create order error:', error.message);
+      res.status(500).json({ message: 'Server error', error: error.message });
+    } finally {
+      session.endSession();
+    }
+  },
+];
+
+const cancelOrder = [
+  async (req, res) => {
+    const orderId = parseInt(req.params.globalId);
+    if (isNaN(orderId) || orderId <= 0) {
+      return res.status(400).json({ message: 'Invalid order ID' });
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const order = await Order.findOne({ globalId: orderId }).session(session);
+      if (!order) {
+        await session.abortTransaction();
+        return res.status(404).json({ message: 'Order not found' });
+      }
+
+      if (order.userId !== req.user.id) {
+        await session.abortTransaction();
+        return res.status(403).json({ message: 'Unauthorized to cancel this order' });
+      }
+
+      if (order.status === 'cancelled') {
+        await session.abortTransaction();
+        return res.status(400).json({ message: 'Order is already cancelled' });
+      }
+
+      if (order.status === 'delivered') {
+        await session.abortTransaction();
+        return res.status(400).json({ message: 'Cannot cancel a delivered order' });
+      }
+
+      const stockUpdates = order.items.map(item => ({
+        updateOne: {
+          filter: { globalId: item.productId },
+          update: { $inc: { stock: item.quantity } },
+        },
+      }));
+      await Product.bulkWrite(stockUpdates, { session });
+
+      if (order.couponCode) {
+        const coupon = await Coupon.findOne({ code: order.couponCode.toLowerCase() }).session(session);
+        if (coupon) {
+          coupon.usedCount = Math.max(0, coupon.usedCount - 1);
+          await coupon.save({ session });
+        }
+      }
+
+      order.status = 'cancelled';
+      order.deliveryStatus = 'cancelled';
+      order.updatedAt = new Date();
+      order.deliveryUpdates.push({
+        status: 'cancelled',
+        updatedBy: req.user.id,
+        timestamp: new Date(),
+      });
+      await order.save({ session });
+
+      await notifyOnOrderCancelled(order, session);
+
+      await session.commitTransaction();
+      res.json({ message: 'Order cancelled successfully', order });
+    } catch (error) {
+      await session.abortTransaction();
+      console.error('Cancel order error:', error.message);
       res.status(500).json({ message: 'Server error', error: error.message });
     } finally {
       session.endSession();
@@ -345,4 +403,4 @@ const exportOrders = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, getUserOrders, getOrder, getAllOrders, updateOrderStatus, exportOrders };
+module.exports = { createOrder, cancelOrder, getUserOrders, getOrder, getAllOrders, updateOrderStatus, exportOrders };

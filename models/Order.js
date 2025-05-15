@@ -40,10 +40,10 @@ const orderSchema = new mongoose.Schema({
   deliveryStatus: { 
     type: String, 
     default: 'pending', 
-    enum: ['pending', 'assigned', 'out-for-delivery', 'delivered'] 
+    enum: ['pending', 'assigned', 'out-for-delivery', 'delivered', 'cancelled'] 
   },
   deliveryUpdates: [{
-    status: { type: String, enum: ['pending', 'assigned', 'out-for-delivery', 'delivered'] },
+    status: { type: String, enum: ['pending', 'assigned', 'out-for-delivery', 'delivered', 'cancelled'] },
     timestamp: { type: Date, default: Date.now },
     updatedBy: { type: Number }, // References User.globalId
   }],
