@@ -74,7 +74,7 @@ const createOrder = [
         };
       });
 
-      const shipping = subtotal > 50 ? 0 : 5.99;
+      const shipping = subtotal > 500 ? 0 : 25.99;
       let discount = 0;
       let appliedCoupon = null;
       if (couponCode) {
