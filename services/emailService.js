@@ -31,8 +31,6 @@ const sendOTP = async (email, otp) => {
                                 <tr>
                                     <td align="center" style="background: linear-gradient(135deg, #2ecc71, #27ae60); padding: 40px 30px; position: relative;">
                                         <!-- Decorative leaf elements -->
-                                        <div style="position: absolute; top: 20px; left: 20px; width: 60px; height: 60px; background-color: rgba(255,255,255,0.1); border-radius: 50% 0 50% 50%; transform: rotate(45deg);"></div>
-                                        <div style="position: absolute; bottom: 20px; right: 20px; width: 80px; height: 80px; background-color: rgba(255,255,255,0.1); border-radius: 50% 50% 0 50%; transform: rotate(45deg);"></div>
                                         
                                         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin-bottom: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                                         <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Verify Your Email</h1>
@@ -285,8 +283,7 @@ const sendUserOrderPlacedEmail = async (email, order) => {
                                 <tr>
                                     <td align="center" style="background: linear-gradient(135deg, #2ecc71, #27ae60); padding: 40px 30px; position: relative;">
                                         <!-- Decorative elements -->
-                                        <div style="position: absolute; top: 20px; left: 20px; width: 60px; height: 60px; background-color: rgba(255,255,255,0.1); border-radius: 50% 0 50% 50%; transform: rotate(45deg);"></div>
-                                        <div style="position: absolute; bottom: 20px; right: 20px; width: 80px; height: 80px; background-color: rgba(255,255,255,0.1); border-radius: 50% 50% 0 50%; transform: rotate(45deg);"></div>
+                                        
                                         
                                         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin-bottom: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                                         <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Thank You for Your Order!</h1>
@@ -422,16 +419,92 @@ const sendAdminOrderPlacedEmail = async (email, order) => {
     subject: `New Order #${order.id} Placed`,
     text: `A new order (#${order.id}) has been placed. Total: $${order.total.toFixed(2)}. Please review and assign a delivery boy at https://greenthicks.com/admin/orders.`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2>New Order Notification</h2>
-        <p>A new order has been placed with the following details:</p>
+      <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
+        <tr>
+            <td>
+                <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.1);">
+                    <!-- Header with 3D effect and greenery -->
+                    <tr>
+                        <td>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td style="position: relative; padding: 0;">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-image: url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=800&auto=format&fit=crop&q=80'); background-size: cover; background-position: center; height: 300px; position: relative;">
+                                            <tr>
+                                                <td style="position: relative;">
+                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.9));">
+                                                        <tr>
+                                                            <td style="padding: 40px 30px; text-align: center;"> <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin: 0 auto 0px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                                                                <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">New Order Notification</h1>
+                                                                <p style="color: white; margin: 10px 0 0; font-size: 18px; opacity: 0.9;">Journey to fresh, healthy living begins now</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px 30px 20px 30px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td style="color: #333333; font-size: 16px; line-height: 24px;">
+                                        <p>A new order has been placed with the following details:</p>
         <p><strong>Order ID:</strong> ${order.id}</p>
         <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
         <p><strong>Customer:</strong> ${order.shippingAddress.firstName} ${order.shippingAddress.lastName}</p>
         <p>Please assign a delivery boy to this order.</p>
-        <p><a href="https://greenthicks.com/admin/orders" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Manage Order</a></p>
-        <p>Best regards,<br>GreenThicks Team</p>
-      </div>
+                                        
+                                        <!-- CTA Button with 3D effect -->
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="text-align: center; margin: 30px 0;">
+                                            <tr>
+                                                <td>
+                                                    <a href="https://greenthicks.com/admin/orders" style="background: linear-gradient(to right, #2ecc71, #27ae60); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); transition: all 0.3s ease;">Manage Order</a>
+                                                </td>
+                                            </tr>
+                                        </table>            
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                      <tr>
+                        <td style="background: linear-gradient(to right, #f9f9f9, #f0f0f0); padding: 20px; border-radius: 0 0 12px 12px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="color: #666666; font-size: 14px;">
+                                        <p style="margin: 0 0 10px;">The GreenThicks Team</p>
+                                        <div style="margin: 15px 0;">
+                                            <a href="https://facebook.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733547.png" alt="Facebook" style="width: 28px; filter: grayscale(100%);"></a>
+                                            <a href="https://x.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733579.png" alt="Twitter" style="width: 28px; filter: grayscale(100%);"></a>
+                                            <a href="https://instagram.com/greenthickss" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/1384/1384063.png" alt="Instagram" style="width: 28px; filter: grayscale(100%);"></a>
+                                            <a href="https://www.linkedin.com/company/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733561.png" alt="LinkedIn" style="width: 28px; filter: grayscale(100%);"></a>
+                                            
+                                        </div>
+                                        <p style="margin: 0;">
+                                            <a href="https://greenthicks.live" style="color: #27ae60; text-decoration: none; font-weight: 500;">Visit our website</a> | 
+                                            <a href="mailto:greenthickss@gmailcom" style="color: #27ae60; text-decoration: none; font-weight: 500;">Contact Support</a>
+                                        </p>
+                                        <p style="margin: 10px 0 0; color: #888888;">© 2025 GreenThicks. All rights reserved.</p>
+                                        <p style="margin: 5px 0 0; color: #888888; font-style: italic;">Fresh from Farm to Table</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
     `,
   };
 
@@ -466,8 +539,7 @@ const sendUserDeliveryStatusEmail = async (email, order, status) => {
                                 <tr>
                                     <td align="center" style="background: linear-gradient(135deg, #2ecc71, #27ae60); padding: 40px 30px; position: relative;">
                                         <!-- Decorative elements -->
-                                        <div style="position: absolute; top: 20px; left: 20px; width: 60px; height: 60px; background-color: rgba(255,255,255,0.1); border-radius: 50% 0 50% 50%; transform: rotate(45deg);"></div>
-                                        <div style="position: absolute; bottom: 20px; right: 20px; width: 80px; height: 80px; background-color: rgba(255,255,255,0.1); border-radius: 50% 50% 0 50%; transform: rotate(45deg);"></div>
+                                        
                                         
                                         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin-bottom: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                                         <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Delivery Status Update</h1>
@@ -675,8 +747,7 @@ const sendDeliveryBoyDeliveryStatusEmail = async (email, order, status) => {
                                 <tr>
                                     <td align="center" style="background: linear-gradient(135deg, #2ecc71, #27ae60); padding: 40px 30px; position: relative;">
                                         <!-- Decorative elements -->
-                                        <div style="position: absolute; top: 20px; left: 20px; width: 60px; height: 60px; background-color: rgba(255,255,255,0.1); border-radius: 50% 0 50% 50%; transform: rotate(45deg);"></div>
-                                        <div style="position: absolute; bottom: 20px; right: 20px; width: 80px; height: 80px; background-color: rgba(255,255,255,0.1); border-radius: 50% 50% 0 50%; transform: rotate(45deg);"></div>
+                                        
                                         
                                         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin-bottom: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                                         <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">New Order Notification</h1>
@@ -828,8 +899,7 @@ const sendUserOrderCancelledEmail = async (email, order) => {
                                 <tr>
                                     <td align="center" style="background: linear-gradient(135deg, #2ecc71, #27ae60); padding: 40px 30px; position: relative;">
                                         <!-- Decorative elements -->
-                                        <div style="position: absolute; top: 20px; left: 20px; width: 60px; height: 60px; background-color: rgba(255,255,255,0.1); border-radius: 50% 0 50% 50%; transform: rotate(45deg);"></div>
-                                        <div style="position: absolute; bottom: 20px; right: 20px; width: 80px; height: 80px; background-color: rgba(255,255,255,0.1); border-radius: 50% 50% 0 50%; transform: rotate(45deg);"></div>
+                                        
                                         
                                         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin-bottom: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                                         <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Order Cancellation</h1>
@@ -935,16 +1005,92 @@ const sendAdminOrderCancelledEmail = async (email, order) => {
     subject: `Order #${order.id} Cancelled`,
     text: `Order (#${order.id}) has been cancelled by the user. Total: $${order.total.toFixed(2)}. Review at https://greenthicks.com/admin/orders.`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2>Order Cancellation Notification</h2>
-        <p>Order (#${order.id}) has been cancelled by the user with the following details:</p>
+      <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
+        <tr>
+            <td>
+                <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.1);">
+                    <!-- Header with 3D effect and greenery -->
+                    <tr>
+                        <td>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td style="position: relative; padding: 0;">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-image: url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=800&auto=format&fit=crop&q=80'); background-size: cover; background-position: center; height: 300px; position: relative;">
+                                            <tr>
+                                                <td style="position: relative;">
+                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.9));">
+                                                        <tr>
+                                                            <td style="padding: 40px 30px; text-align: center;"> <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin: 0 auto 0px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                                                                <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Order Cancellation Notification</h1>
+                                                                <p style="color: white; margin: 10px 0 0; font-size: 18px; opacity: 0.9;">Order (#${order.id}) has been cancelled by the user with the following details:</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px 30px 20px 30px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td style="color: #333333; font-size: 16px; line-height: 24px;">
+                                        <p>Order (#${order.id}) has been cancelled by the user with the following details:</p>
         <p><strong>Order ID:</strong> ${order.id}</p>
         <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
         <p><strong>Customer:</strong> ${order.shippingAddress.firstName} ${order.shippingAddress.lastName}</p>
         <p>Please review the order details in the admin panel.</p>
-        <p><a href="https://greenthicks.com/admin/orders" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Manage Order</a></p>
-        <p>Best regards,<br>GreenThicks Team</p>
-      </div>
+                                        
+                                        <!-- CTA Button with 3D effect -->
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="text-align: center; margin: 30px 0;">
+                                            <tr>
+                                                <td>
+                                                    <a href="https://greenthicks.com/admin/orders" style="background: linear-gradient(to right, #2ecc71, #27ae60); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); transition: all 0.3s ease;">Manage Order</a>
+                                                </td>
+                                            </tr>
+                                        </table>            
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                      <tr>
+                        <td style="background: linear-gradient(to right, #f9f9f9, #f0f0f0); padding: 20px; border-radius: 0 0 12px 12px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="color: #666666; font-size: 14px;">
+                                        <p style="margin: 0 0 10px;">The GreenThicks Team</p>
+                                        <div style="margin: 15px 0;">
+                                            <a href="https://facebook.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733547.png" alt="Facebook" style="width: 28px; filter: grayscale(100%);"></a>
+                                            <a href="https://x.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733579.png" alt="Twitter" style="width: 28px; filter: grayscale(100%);"></a>
+                                            <a href="https://instagram.com/greenthickss" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/1384/1384063.png" alt="Instagram" style="width: 28px; filter: grayscale(100%);"></a>
+                                            <a href="https://www.linkedin.com/company/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733561.png" alt="LinkedIn" style="width: 28px; filter: grayscale(100%);"></a>
+                                            
+                                        </div>
+                                        <p style="margin: 0;">
+                                            <a href="https://greenthicks.live" style="color: #27ae60; text-decoration: none; font-weight: 500;">Visit our website</a> | 
+                                            <a href="mailto:greenthickss@gmailcom" style="color: #27ae60; text-decoration: none; font-weight: 500;">Contact Support</a>
+                                        </p>
+                                        <p style="margin: 10px 0 0; color: #888888;">© 2025 GreenThicks. All rights reserved.</p>
+                                        <p style="margin: 5px 0 0; color: #888888; font-style: italic;">Fresh from Farm to Table</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
     `,
   };
 
@@ -962,18 +1108,93 @@ const sendDeliveryBoyOrderCancelledEmail = async (email, order) => {
     subject: `Order #${order.id} Cancelled`,
     text: `Order (#${order.id}) has been cancelled. No further action is required. View details at https://greenthicks.com/delivery/orders/${order.globalId}.`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2>Order Cancellation Notification</h2>
-        <p>Order (#${order.id}) has been cancelled by the user. No further action is required.</p>
-        <h3>Order Details</h3>
+      <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
+        <tr>
+            <td>
+                <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.1);">
+                    <!-- Header with 3D effect and greenery -->
+                    <tr>
+                        <td>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td style="position: relative; padding: 0;">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-image: url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=800&auto=format&fit=crop&q=80'); background-size: cover; background-position: center; height: 300px; position: relative;">
+                                            <tr>
+                                                <td style="position: relative;">
+                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.9));">
+                                                        <tr>
+                                                            <td style="padding: 40px 30px; text-align: center;"> <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin: 0 auto 0px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                                                                <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Order Cancellation Notification</h1>
+                                                                <p style="color: white; margin: 10px 0 0; font-size: 18px; opacity: 0.9;">Order (#${order.id}) has been cancelled by the user. No further action is required.</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px 30px 20px 30px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td style="color: #333333; font-size: 16px; line-height: 24px;">
+                                        <h3>Order Details</h3>
         <p><strong>Order ID:</strong> ${order.id}</p>
-        <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
-        <p><strong>Items:</strong></p>
-        <ul>${itemsList}</ul>
+        <p><strong>Total:</strong> ₹${order.total.toFixed(2)}</p>
+        <p><strong>Items:</strong><ul>${itemsList}</ul></p>
+        
         <p><strong>Customer:</strong> ${order.shippingAddress.firstName} ${order.shippingAddress.lastName}</p>
-        <p><a href="https://greenthicks.com/delivery/orders/${order.globalId}" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Order</a></p>
-        <p>Best regards,<br>GreenThicks Team</p>
-      </div>
+                                        
+                                        <!-- CTA Button with 3D effect -->
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="text-align: center; margin: 30px 0;">
+                                            <tr>
+                                                <td>
+                                                    <a href="https://greenthicks.com/admin/orders" style="background: linear-gradient(to right, #2ecc71, #27ae60); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); transition: all 0.3s ease;">View Order</a>
+                                                </td>
+                                            </tr>
+                                        </table>            
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                      <tr>
+                        <td style="background: linear-gradient(to right, #f9f9f9, #f0f0f0); padding: 20px; border-radius: 0 0 12px 12px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="color: #666666; font-size: 14px;">
+                                        <p style="margin: 0 0 10px;">The GreenThicks Team</p>
+                                        <div style="margin: 15px 0;">
+                                            <a href="https://facebook.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733547.png" alt="Facebook" style="width: 28px; filter: grayscale(100%);"></a>
+                                            <a href="https://x.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733579.png" alt="Twitter" style="width: 28px; filter: grayscale(100%);"></a>
+                                            <a href="https://instagram.com/greenthickss" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/1384/1384063.png" alt="Instagram" style="width: 28px; filter: grayscale(100%);"></a>
+                                            <a href="https://www.linkedin.com/company/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733561.png" alt="LinkedIn" style="width: 28px; filter: grayscale(100%);"></a>
+                                            
+                                        </div>
+                                        <p style="margin: 0;">
+                                            <a href="https://greenthicks.live" style="color: #27ae60; text-decoration: none; font-weight: 500;">Visit our website</a> | 
+                                            <a href="mailto:greenthickss@gmailcom" style="color: #27ae60; text-decoration: none; font-weight: 500;">Contact Support</a>
+                                        </p>
+                                        <p style="margin: 10px 0 0; color: #888888;">© 2025 GreenThicks. All rights reserved.</p>
+                                        <p style="margin: 5px 0 0; color: #888888; font-style: italic;">Fresh from Farm to Table</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
     `,
   };
 
