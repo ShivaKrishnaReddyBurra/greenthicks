@@ -17,15 +17,15 @@ const sendVerificationEmail = async (email, token) => {
     const mailOptions = {
       from: `"GreenThicks Team" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Verify Your Email Address',
-      text: `Please verify your email by clicking the link: ${verificationLink}`,
+      subject: 'Welcome to GreenThicks! Confirm Your Email to Get Started',
+      text: `Thank you for signing up with GreenThicks! Please verify your email by clicking the link below to activate your account:\n${verificationLink}\n\nIf you didn’t sign up, feel free to ignore this email.\n\nHappy shopping,\nThe GreenThicks Team`,
       html: `
         <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
           <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
             <tr>
               <td>
                 <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.1);">
-                  <!-- Header with 3D effect and greenery -->
+                  <!-- Header -->
                   <tr>
                     <td>
                       <table border="0" cellpadding="0" cellspacing="0" width="100%">
@@ -38,7 +38,7 @@ const sendVerificationEmail = async (email, token) => {
                                     <tr>
                                       <td style="padding: 40px 30px; text-align: center;">
                                         <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin: 0 auto 0px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-                                        <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Verify Your Email</h1>
+                                        <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Confirm Your Email</h1>
                                         <p style="color: white; margin: 10px 0 0; font-size: 18px; opacity: 0.9;">One step to join GreenThicks</p>
                                       </td>
                                     </tr>
@@ -57,12 +57,11 @@ const sendVerificationEmail = async (email, token) => {
                       <table border="0" cellpadding="0" cellspacing="0" width="100%">
                         <tr>
                           <td style="color: #333333; font-size: 16px; line-height: 24px;">
-                            <p style="margin-top: 0;">Thank you for signing up with GreenThicks! To activate your account, please verify your email address by clicking the button below.</p>
-                            <!-- CTA Button with 3D effect -->
+                            <p style="margin-top: 0;">We're excited to have you join GreenThicks! Verify your email to start exploring our farm-fresh, organic produce delivered right to your door.</p>
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="text-align: center; margin: 30px 0;">
                               <tr>
                                 <td>
-                                  <a href="${verificationLink}" style="background: linear-gradient(to right, #2ecc71, #27ae60); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); transition: all 0.3s ease;">Verify Email</a>
+                                  <a href="${verificationLink}" style="background: linear-gradient(to right, #2ecc71, #27ae60); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); transition: all 0.3s ease;">Confirm Your Account</a>
                                 </td>
                               </tr>
                             </table>

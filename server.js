@@ -19,7 +19,7 @@ const app = express();
 
 // Add CORS middleware
 app.use(cors({
-  origin: [process.env.FRONTEND_URL, 'https://greenthicks-backend.azurewebsites.net'],
+  origin: [process.env.FRONTEND_URL, 'https://greenthicks-backend.azurewebsites.net',process.env.SECOND_FRONTEND_URL],
   credentials: true,
 }));
 
