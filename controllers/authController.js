@@ -5,7 +5,9 @@ const User = require('../models/User');
 const Counter = require('../models/Counter');
 const Cart = require('../models/Cart');
 const Order = require('../models/Order');
-const { sendWelcomeEmail } = require('../services/emailService');
+const VerificationToken = require('../models/VerificationToken');
+const { sendVerificationEmail, sendWelcomeEmail } = require('../services/emailService');
+const crypto = require('crypto');
 
 const signup = [
   body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
@@ -41,11 +43,24 @@ const signup = [
         lastName,
         username,
         isAdmin: isAdmin || false,
+        isVerified: false, // Ensure user is not verified initially
       });
       await user.save();
+
+      // Generate verification token
+      const token = crypto.randomBytes(32).toString('hex');
+      const verificationToken = new VerificationToken({
+        email,
+        token,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
+      });
+      await verificationToken.save();
+
+      // Send verification email
+      await sendVerificationEmail(email, token);
       await sendWelcomeEmail(email);
 
-      res.status(201).json({ message: 'User created successfully' });
+      res.status(201).json({ message: 'User created successfully. Please verify your email to activate your account.' });
     } catch (error) {
       console.error('Signup error:', error.message);
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -68,6 +83,11 @@ const login = [
       });
       if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
+      // Optional: Restrict login for unverified users
+      if (!user.isVerified) {
+        return res.status(403).json({ message: 'Please verify your email before logging in.' });
+      }
+
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
@@ -82,6 +102,7 @@ const login = [
           lastName: user.lastName,
           username: user.username,
           isAdmin: user.isAdmin,
+          isVerified: user.isVerified,
         },
       });
     } catch (error) {
@@ -168,7 +189,8 @@ const updateUser = [
           status: user.status,
           joinedDate: user.joinedDate,
           isAdmin: user.isAdmin,
-          isDeliveryBoy: user.isDeliveryBoy
+          isDeliveryBoy: user.isDeliveryBoy,
+          isVerified: user.isVerified,
         }
       });
     } catch (error) {
@@ -216,7 +238,8 @@ const getUserProfile = async (req, res) => {
       status: user.status,
       joinedDate: user.joinedDate,
       isAdmin: user.isAdmin,
-      isDeliveryBoy: user.isDeliveryBoy
+      isDeliveryBoy: user.isDeliveryBoy,
+      isVerified: user.isVerified,
     });
   } catch (error) {
     console.error('Get user profile error:', error.message);
@@ -273,6 +296,7 @@ const getUserDetails = [
         joinedDate: user.joinedDate,
         isAdmin: user.isAdmin,
         isDeliveryBoy: user.isDeliveryBoy,
+        isVerified: user.isVerified,
         addresses: user.addresses,
         cart: {
           items: cart.items,

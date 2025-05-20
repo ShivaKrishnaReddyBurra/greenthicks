@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String },
   createdAt: { type: Date, default: Date.now },
   joinedDate: { type: String, default: new Date().toISOString().split('T')[0] },
+  isVerified: { type: Boolean, default: false }, // New field for email verification
 });
 
 // Pre-save hook to generate id and computed fields

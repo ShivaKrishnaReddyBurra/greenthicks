@@ -4,3 +4,4 @@ node_modules/
 out
 migrateUsers.js
 migrateAddressesAndOrders.js
+test.js

@@ -122,6 +122,7 @@ const generateInvoice = [
             name: `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}`,
             address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}`,
             email: user.email,
+            phoneNumber: order.shippingAddress.phone
           },
           items: order.items.map(item => ({
             name: item.name,
