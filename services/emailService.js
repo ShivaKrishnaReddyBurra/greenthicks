@@ -266,8 +266,8 @@ const sendUserOrderPlacedEmail = async (email, order) => {
     <tr>
       <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.name}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${item.price.toFixed(2)}</td>
-      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${(item.price * item.quantity).toFixed(2)}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price.toFixed(2)}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${(item.price * item.quantity).toFixed(2)}</td>
     </tr>
   `).join('');
 
@@ -275,7 +275,7 @@ const sendUserOrderPlacedEmail = async (email, order) => {
     from: `"GreenThicks Team" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: `Your Order #${order.id} Has Been Placed`,
-    text: `Thank you for your order (#${order.id}). Total: $${order.total.toFixed(2)}. View your order details at https://greenthicks.com/orders/${order.globalId}.`,
+    text: `Thank you for your order (#${order.id}). Total: ₹${order.total.toFixed(2)}. View your order details at https://greenthicks.com/orders/${order.globalId}.`,
     html: `
       <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
@@ -330,15 +330,15 @@ const sendUserOrderPlacedEmail = async (email, order) => {
                                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 20px;">
                                                 <tr>
                                                     <td style="padding: 8px 0; color: #666;"><strong>Subtotal:</strong></td>
-                                                    <td style="padding: 8px 0; text-align: right; color: #666;">$${order.subtotal.toFixed(2)}</td>
+                                                    <td style="padding: 8px 0; text-align: right; color: #666;">₹${order.subtotal.toFixed(2)}</td>
                                                 </tr>
                                                 <tr>
                                                     <td style="padding: 8px 0; color: #666;"><strong>Shipping:</strong></td>
-                                                    <td style="padding: 8px 0; text-align: right; color: #666;">$${order.shipping.toFixed(2)}</td>
+                                                    <td style="padding: 8px 0; text-align: right; color: #666;">₹${order.shipping.toFixed(2)}</td>
                                                 </tr>
                                                 <tr>
                                                     <td style="padding: 8px 0; color: #666;"><strong>Discount:</strong></td>
-                                                    <td style="padding: 8px 0; text-align: right; color: #666;">-$${order.discount.toFixed(2)}</td>
+                                                    <td style="padding: 8px 0; text-align: right; color: #666;">-v${order.discount.toFixed(2)}</td>
                                                 </tr>
                                                 <tr>
                                                     <td style="padding: 15px 0 8px; border-top: 2px solid rgba(46, 204, 113, 0.1); color: #333; font-size: 18px;"><strong>Total:</strong></td>
@@ -423,7 +423,7 @@ const sendAdminOrderPlacedEmail = async (email, order) => {
     from: `"GreenThicks Team" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: `New Order #${order.id} Placed`,
-    text: `A new order (#${order.id}) has been placed. Total: $${order.total.toFixed(2)}. Please review and assign a delivery boy at https://greenthicks.com/admin/orders.`,
+    text: `A new order (#${order.id}) has been placed. Total: ₹${order.total.toFixed(2)}. Please review and assign a delivery boy at https://greenthicks.com/admin/orders.`,
     html: `
       <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
@@ -464,7 +464,7 @@ const sendAdminOrderPlacedEmail = async (email, order) => {
                                     <td style="color: #333333; font-size: 16px; line-height: 24px;">
                                         <p>A new order has been placed with the following details:</p>
         <p><strong>Order ID:</strong> ${order.id}</p>
-        <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
+        <p><strong>Total:</strong> ₹${order.total.toFixed(2)}</p>
         <p><strong>Customer:</strong> ${order.shippingAddress.firstName} ${order.shippingAddress.lastName}</p>
         <p>Please assign a delivery boy to this order.</p>
                                         
@@ -522,8 +522,8 @@ const sendUserDeliveryStatusEmail = async (email, order, status) => {
     <tr>
       <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.name}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${item.price.toFixed(2)}</td>
-      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${(item.price * item.quantity).toFixed(2)}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price.toFixed(2)}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">v${(item.price * item.quantity).toFixed(2)}</td>
     </tr>
   `).join('');
 
@@ -639,7 +639,7 @@ const sendUserDeliveryStatusEmail = async (email, order, status) => {
                                             </tbody>
                                         </table>
                                         
-                                        <p style="margin: 20px 0 0; text-align: right; font-size: 18px;"><strong>Total:</strong> <span style="color: #27ae60; font-weight: 600;">$${order.total.toFixed(2)}</span></p>
+                                        <p style="margin: 20px 0 0; text-align: right; font-size: 18px;"><strong>Total:</strong> <span style="color: #27ae60; font-weight: 600;">₹${order.total.toFixed(2)}</span></p>
                                         
                                         <!-- Delivery Address -->
                                         <h3 style="color: #27ae60; margin: 30px 0 15px; font-size: 20px; border-bottom: 2px solid rgba(46, 204, 113, 0.1); padding-bottom: 10px;">Delivery Address</h3>
@@ -712,7 +712,7 @@ const sendAdminDeliveryStatusEmail = async (email, order, status) => {
         <h2>Delivery Status Update</h2>
         <p>Order (#${order.id}) has been updated to: <strong>${status.replace('-', ' ').toUpperCase()}</strong></p>
         <p><strong>Order ID:</strong> ${order.id}</p>
-        <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
+        <p><strong>Total:</strong> ₹${order.total.toFixed(2)}</p>
         <p><strong>Customer:</strong> ${order.shippingAddress.firstName} ${order.shippingAddress.lastName}</p>
         <p>Please review the order details in the admin panel.</p>
         <p><a href="https://greenthicks.com/admin/orders" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Manage Order</a></p>
@@ -726,7 +726,7 @@ const sendAdminDeliveryStatusEmail = async (email, order, status) => {
 
 const sendDeliveryBoyDeliveryStatusEmail = async (email, order, status) => {
   const itemsList = order.items.map(item => `
-    <li>${item.name} (Qty: ${item.quantity}, Price: $${item.price.toFixed(2)})</li>
+    <li>${item.name} (Qty: ${item.quantity}, Price: ₹${item.price.toFixed(2)})</li>
   `).join('');
 
   const instructions = status === 'assigned' 
@@ -787,7 +787,7 @@ const sendDeliveryBoyDeliveryStatusEmail = async (email, order, status) => {
                                                 </tr>
                                                 <tr>
                                                     <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; color: #666; font-weight: 600;">Total Amount:</td>
-                                                    <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; color: #27ae60; font-weight: 600;">$${order.total.toFixed(2)}</td>
+                                                    <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; color: #27ae60; font-weight: 600;">₹${order.total.toFixed(2)}</td>
                                                 </tr>
                                                 <tr>
                                                     <td style="padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; color: #666; font-weight: 600;">Payment Method:</td>
@@ -882,8 +882,8 @@ const sendUserOrderCancelledEmail = async (email, order) => {
     <tr>
       <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.name}</td>
       <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${item.price.toFixed(2)}</td>
-      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">$${(item.price * item.quantity).toFixed(2)}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${item.price.toFixed(2)}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₹${(item.price * item.quantity).toFixed(2)}</td>
     </tr>
   `).join('');
 
@@ -891,7 +891,7 @@ const sendUserOrderCancelledEmail = async (email, order) => {
     from: `"GreenThicks Team" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: `Your Order #${order.id} Has Been Cancelled`,
-    text: `Your order (#${order.id}) has been cancelled. Total: $${order.total.toFixed(2)}. For more details, visit https://greenthicks.com/orders/${order.globalId}.`,
+    text: `Your order (#${order.id}) has been cancelled. Total: ₹${order.total.toFixed(2)}. For more details, visit https://greenthicks.com/orders/${order.globalId}.`,
     html: `
      <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
@@ -949,7 +949,7 @@ const sendUserOrderCancelledEmail = async (email, order) => {
                                                 </tbody>
                                             </table>
                                             
-                                            <p style="margin: 20px 0 0; text-align: right; font-size: 18px;"><strong>Total:</strong> <span style="color: #27ae60; font-weight: 600;">$${order.total.toFixed(2)}</span></p>
+                                            <p style="margin: 20px 0 0; text-align: right; font-size: 18px;"><strong>Total:</strong> <span style="color: #27ae60; font-weight: 600;">₹${order.total.toFixed(2)}</span></p>
                                         </div>
                                         
                                         <p>If you have any questions about this cancellation or would like to place a new order, please don't hesitate to contact our customer support team.</p>
@@ -1009,7 +1009,7 @@ const sendAdminOrderCancelledEmail = async (email, order) => {
     from: `"GreenThicks Team" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: `Order #${order.id} Cancelled`,
-    text: `Order (#${order.id}) has been cancelled by the user. Total: $${order.total.toFixed(2)}. Review at https://greenthicks.com/admin/orders.`,
+    text: `Order (#${order.id}) has been cancelled by the user. Total: ₹${order.total.toFixed(2)}. Review at https://greenthicks.com/admin/orders.`,
     html: `
       <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
@@ -1050,7 +1050,7 @@ const sendAdminOrderCancelledEmail = async (email, order) => {
                                     <td style="color: #333333; font-size: 16px; line-height: 24px;">
                                         <p>Order (#${order.id}) has been cancelled by the user with the following details:</p>
         <p><strong>Order ID:</strong> ${order.id}</p>
-        <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
+        <p><strong>Total:</strong> ₹${order.total.toFixed(2)}</p>
         <p><strong>Customer:</strong> ${order.shippingAddress.firstName} ${order.shippingAddress.lastName}</p>
         <p>Please review the order details in the admin panel.</p>
                                         
@@ -1105,7 +1105,7 @@ const sendAdminOrderCancelledEmail = async (email, order) => {
 
 const sendDeliveryBoyOrderCancelledEmail = async (email, order) => {
   const itemsList = order.items.map(item => `
-    <li>${item.name} (Qty: ${item.quantity}, Price: $${item.price.toFixed(2)})</li>
+    <li>${item.name} (Qty: ${item.quantity}, Price: ₹${item.price.toFixed(2)})</li>
   `).join('');
 
   const mailOptions = {
