@@ -16,7 +16,7 @@ const signup = [
   body('lastName').notEmpty().trim().withMessage('Last name is required'),
   body('username').notEmpty().trim().withMessage('Username is required'),
   body('isAdmin').optional().isBoolean().withMessage('isAdmin must be a boolean'),
-  body('phone').matches(/^\+\d{10,12}$/).withMessage('Phone number must be in international format (e.g., +12345678901)'),
+  body('phone').matches(/^(?:\+91)?[6-9]\d{9}$/).withMessage('Phone number must be in indian format (e.g., +91 9705045597)'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -120,7 +120,7 @@ const updateUser = [
   body('firstName').optional().trim(),
   body('lastName').optional().trim(),
   body('username').optional().trim(),
-  body('phone').optional().matches(/^\+\d{10,12}$/).withMessage('Phone number must be in international format (e.g., +12345678901)'),
+  body('phone').optional().matches(/^(?:\+91)?[6-9]\d{9}$/).withMessage('Phone number must be in indian format (e.g., +91 92345678901)'),
   body('address').optional().trim(),
   body('city').optional().trim(),
   body('state').optional().trim(),
