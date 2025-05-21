@@ -127,6 +127,7 @@ const generateInvoice = [
           items: order.items.map(item => ({
             name: item.name,
             quantity: item.quantity,
+            unit: item.unit,
             price: item.price,
             total: item.price * item.quantity,
           })),
@@ -240,6 +241,7 @@ const generateInvoice = [
       <thead>
         <tr>
           <th>Description</th>
+          <th>Unit</th>
           <th>Qty</th>
           <th>Unit Price</th>
           <th class="right-align">Total</th>
@@ -251,6 +253,7 @@ const generateInvoice = [
             item => `
               <tr>
                 <td>${escapeHtml(item.name)}</td>
+                <td>${item.unit}</td>
                 <td>${item.quantity}</td>
                 <td>$${item.price.toFixed(2)}</td>
                 <td class="right-align">$${(item.price * item.quantity).toFixed(2)}</td>

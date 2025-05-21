@@ -11,6 +11,7 @@ const orderSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     quantity: { type: Number, required: true, min: 1 },
     image: { type: String },
+    unit: { type: String, required: true }, 
   }],
   subtotal: { type: Number, required: true, min: 0 },
   shipping: { type: Number, required: true, min: 0 },

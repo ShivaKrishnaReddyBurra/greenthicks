@@ -7,7 +7,7 @@ const { body, query, validationResult } = require('express-validator');
 const User = require('../models/User');
 const VerificationToken = require('../models/VerificationToken');
 const crypto = require('crypto');
-const {sendVerificationEmail} = require('../services/emailService');
+const {sendVerificationEmail, sendWelcomeEmail} = require('../services/emailService');
 
 const router = express.Router();
 
@@ -51,10 +51,11 @@ router.get('/verify-email', [
 
     user.isVerified = true;
     await user.save();
-
+     
     await VerificationToken.deleteOne({ email, token });
 
     res.json({ message: 'Email verified successfully' });
+    await sendWelcomeEmail(user.email);
   } catch (error) {
     console.error('Email verification error:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });

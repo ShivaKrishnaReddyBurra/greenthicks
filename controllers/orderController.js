@@ -9,6 +9,7 @@ const Coupon = require('../models/Coupon');
 const ServiceArea = require('../models/ServiceArea');
 const { notifyOnOrderPlaced, notifyOnOrderCancelled } = require('./notificationController');
 const { updateDeliveryStatus } = require('./deliveryController');
+const { console } = require('inspector');
 
 const createOrder = [
   body('paymentMethod').isIn(['credit-card', 'upi', 'cash-on-delivery']).withMessage('Invalid payment method'),
@@ -70,6 +71,7 @@ const createOrder = [
           name: product.name,
           price: product.price,
           quantity: item.quantity,
+          unit: product.unit,
           image: product.images[0] || '',
         };
       });

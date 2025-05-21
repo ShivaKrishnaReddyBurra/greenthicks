@@ -16,16 +16,17 @@ const signup = [
   body('lastName').notEmpty().trim().withMessage('Last name is required'),
   body('username').notEmpty().trim().withMessage('Username is required'),
   body('isAdmin').optional().isBoolean().withMessage('isAdmin must be a boolean'),
+  body('phone').matches(/^\+\d{10,12}$/).withMessage('Phone number must be in international format (e.g., +12345678901)'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { email, password, firstName, lastName, username, isAdmin } = req.body;
+    const { email, password, firstName, lastName, username, isAdmin, phone } = req.body;
 
     try {
       let user = await User.findOne({ email });
       if (user) return res.status(400).json({ message: 'Email already exists' });
-
+      
       user = await User.findOne({ username });
       if (user) return res.status(400).json({ message: 'Username already exists' });
 
@@ -42,6 +43,7 @@ const signup = [
         firstName,
         lastName,
         username,
+        phone,
         isAdmin: isAdmin || false,
         isVerified: false, // Ensure user is not verified initially
       });
@@ -58,7 +60,6 @@ const signup = [
 
       // Send verification email
       await sendVerificationEmail(email, token);
-      await sendWelcomeEmail(email);
 
       res.status(201).json({ message: 'User created successfully. Please verify your email to activate your account.' });
     } catch (error) {
@@ -103,6 +104,7 @@ const login = [
           username: user.username,
           isAdmin: user.isAdmin,
           isVerified: user.isVerified,
+          phone: user.phone,
         },
       });
     } catch (error) {
@@ -118,7 +120,7 @@ const updateUser = [
   body('firstName').optional().trim(),
   body('lastName').optional().trim(),
   body('username').optional().trim(),
-  body('phone').optional().trim(),
+  body('phone').optional().matches(/^\+\d{10,12}$/).withMessage('Phone number must be in international format (e.g., +12345678901)'),
   body('address').optional().trim(),
   body('city').optional().trim(),
   body('state').optional().trim(),
