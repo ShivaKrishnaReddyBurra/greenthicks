@@ -1,113 +1,157 @@
-const express = require('express');
-    const jwt = require('jsonwebtoken');
-    const Notification = require('../models/notification');
+const express = require("express")
+const router = express.Router()
+const Notification = require("../models/Notification")
+const authenticate = require("../middleware/authenticate")
 
-    const router = express.Router();
-    const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret'; // Replace with your secret in .env
+// Middleware to check if user is admin
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.isAdmin) {
+    return next()
+  }
+  return res.status(403).json({ message: "Access denied: Admins only" })
+}
 
-    // Authentication Middleware
-    const authenticateToken = (req, res, next) => {
-      const authHeader = req.headers['authorization'];
-      const token = authHeader && authHeader.split(' ')[1];
+// Get admin notifications only
+router.get("/", authenticate, isAdmin, async (req, res) => {
+  try {
+    const page = Number.parseInt(req.query.page) || 1
+    const limit = Number.parseInt(req.query.limit) || 20
+    const skip = (page - 1) * limit
 
-      if (!token) {
-        return res.status(401).json({ error: 'Access token required' });
-      }
+    // Find notifications for admin users only
+    const adminUsers = await require("../models/User").find({ isAdmin: true }).select("globalId")
+    const adminIds = adminUsers.map((admin) => admin.globalId)
 
-      try {
-        const user = jwt.verify(token, JWT_SECRET);
-        req.user = user;
-        next();
-      } catch (error) {
-        return res.status(401).json({ error: 'Token expired or invalid' });
-      }
-    };
+    const notifications = await Notification.find({
+      recipientId: { $in: adminIds },
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
 
-    // Admin Middleware
-    const isAdmin = (req, res, next) => {
-      if (!req.user.isAdmin) {
-        return res.status(403).json({ error: 'Access restricted: Admins only' });
-      }
-      next();
-    };
+    const total = await Notification.countDocuments({
+      recipientId: { $in: adminIds },
+    })
 
-    // Notification Routes
-    router.get('/notifications', authenticateToken, isAdmin, async (req, res) => {
-      try {
-        const notifications = await Notification.find().sort({ createdAt: -1 });
-        res.json(notifications);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    });
+    const formattedNotifications = notifications.map((notification) => ({
+      _id: notification._id,
+      title: notification.subject,
+      message: notification.message,
+      type: notification.type === "email" ? "order" : notification.type,
+      read: notification.status === "read",
+      createdAt: notification.createdAt,
+      orderId: notification.orderId,
+    }))
 
-    router.post('/notifications', authenticateToken, isAdmin, async (req, res) => {
-      try {
-        const { type, title, message, time } = req.body;
-        const notification = new Notification({
-          type,
-          title,
-          message,
-          time,
-          read: false,
-        });
-        await notification.save();
-        res.status(201).json(notification);
-      } catch (error) {
-        console.error('Error creating notification:', error);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    });
+    res.json({
+      notifications: formattedNotifications,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      },
+    })
+  } catch (error) {
+    console.error("Error fetching admin notifications:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
 
-    router.patch('/notifications/:id/read', authenticateToken, isAdmin, async (req, res) => {
-      try {
-        const notification = await Notification.findByIdAndUpdate(
-          req.params.id,
-          { read: true },
-          { new: true }
-        );
-        if (!notification) {
-          return res.status(404).json({ error: 'Notification not found' });
-        }
-        res.json(notification);
-      } catch (error) {
-        console.error('Error marking notification as read:', error);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    });
+// Mark notification as read
+router.patch("/:id/read", authenticate, isAdmin, async (req, res) => {
+  try {
+    const notification = await Notification.findById(req.params.id)
 
-    router.patch('/notifications/read-all', authenticateToken, isAdmin, async (req, res) => {
-      try {
-        await Notification.updateMany({ read: false }, { read: true });
-        res.json({ message: 'All notifications marked as read' });
-      } catch (error) {
-        console.error('Error marking all notifications as read:', error);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    });
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" })
+    }
 
-    router.delete('/notifications/:id', authenticateToken, isAdmin, async (req, res) => {
-      try {
-        const notification = await Notification.findByIdAndDelete(req.params.id);
-        if (!notification) {
-          return res.status(404).json({ error: 'Notification not found' });
-        }
-        res.json({ message: 'Notification deleted' });
-      } catch (error) {
-        console.error('Error deleting notification:', error);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    });
+    notification.status = "read"
+    await notification.save()
 
-    router.delete('/notifications', authenticateToken, isAdmin, async (req, res) => {
-      try {
-        await Notification.deleteMany({});
-        res.json({ message: 'All notifications deleted' });
-      } catch (error) {
-        console.error('Error deleting all notifications:', error);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    });
+    res.json({ message: "Notification marked as read" })
+  } catch (error) {
+    console.error("Error marking notification as read:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
 
-    module.exports = router;
+// Mark all notifications as read
+router.patch("/read-all", authenticate, isAdmin, async (req, res) => {
+  try {
+    const adminUsers = await require("../models/User").find({ isAdmin: true }).select("globalId")
+    const adminIds = adminUsers.map((admin) => admin.globalId)
+
+    await Notification.updateMany({ recipientId: { $in: adminIds } }, { status: "read" })
+
+    res.json({ message: "All notifications marked as read" })
+  } catch (error) {
+    console.error("Error marking all notifications as read:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+// Delete notification
+router.delete("/:id", authenticate, isAdmin, async (req, res) => {
+  try {
+    const notification = await Notification.findById(req.params.id)
+
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" })
+    }
+
+    await Notification.findByIdAndDelete(req.params.id)
+
+    res.json({ message: "Notification deleted" })
+  } catch (error) {
+    console.error("Error deleting notification:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+// Clear all notifications
+router.delete("/", authenticate, isAdmin, async (req, res) => {
+  try {
+    const adminUsers = await require("../models/User").find({ isAdmin: true }).select("globalId")
+    const adminIds = adminUsers.map((admin) => admin.globalId)
+
+    await Notification.deleteMany({ recipientId: { $in: adminIds } })
+
+    res.json({ message: "All notifications cleared" })
+  } catch (error) {
+    console.error("Error clearing notifications:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+// Create notification (admin only)
+router.post("/", authenticate, isAdmin, async (req, res) => {
+  try {
+    const { title, message, type = "system" } = req.body
+
+    if (!title || !message) {
+      return res.status(400).json({ message: "Title and message are required" })
+    }
+
+    // Send notification to all admin users
+    const adminUsers = await require("../models/User").find({ isAdmin: true }).select("globalId")
+
+    const notifications = adminUsers.map((admin) => ({
+      recipientId: admin.globalId,
+      subject: title,
+      message: message,
+      type: type,
+      status: "sent",
+    }))
+
+    await Notification.insertMany(notifications)
+
+    res.status(201).json({ message: "Notification created successfully" })
+  } catch (error) {
+    console.error("Error creating notification:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+module.exports = router
+// This code defines the admin notifications routes for managing notifications in an Express.js application.
