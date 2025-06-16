@@ -1,16 +1,39 @@
-const express = require('express');
-const { addServiceArea, updateServiceArea, deleteServiceArea, getServiceAreas, checkServiceAvailability } = require('../controllers/serviceAreaController');
-const authenticate = require('../middleware/authenticate');
-
+const express = require("express");
 const router = express.Router();
+const authenticate = require("../middleware/authenticate");
+const {
+  getAllServiceAreas,
+  getServiceAreaById,
+  getServiceAreaByPincode,
+  createServiceArea,
+  updateServiceArea,
+  deleteServiceArea,
+  checkLocationInServiceArea,
+  getActiveServiceAreas
+} = require("../controllers/serviceAreaController");
 
-// Admin routes
-router.post('/', authenticate, addServiceArea);
-router.put('/:pincode', authenticate, updateServiceArea);
-router.delete('/:pincode', authenticate, deleteServiceArea);
-router.get('/', authenticate, getServiceAreas);
+// Get all service areas
+router.get("/", getAllServiceAreas);
 
-// Public route
-router.get('/check', checkServiceAvailability);
+// Get service area by ID
+router.get("/:id", getServiceAreaById);
+
+// Get service area by pincode (for lookup)
+router.get("/pincode/:pincode", getServiceAreaByPincode);
+
+// Create a new service area (admin only)
+router.post("/", authenticate, createServiceArea);
+
+// Update a service area by ID (admin only)
+router.put("/:id", authenticate, updateServiceArea);
+
+// Delete a service area by ID (admin only)
+router.delete("/:id", authenticate, deleteServiceArea);
+
+// Check if a location is within any service area
+router.post("/check-location", checkLocationInServiceArea);
+
+// Get all active service areas (public)
+router.get("/active/all", getActiveServiceAreas);
 
 module.exports = router;

@@ -11,15 +11,19 @@ const addAddress = [
   body('state').notEmpty().trim().withMessage('State is required'),
   body('zipCode').matches(/^\d{5,6}$/).withMessage('ZIP code must be 5 or 6 digits'),
   body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-  body('phone').matches(/^(?:\+91\s?)?\d{10}$/).withMessage('Phone number must be in indian format (e.g., +91 9876543210)'),
+  body('phone').matches(/^(?:\+91\s?)?[6-9]\d{9}$/).withMessage('Phone number must be in Indian format (e.g., +91 9876543210)'),
   body('isPrimary').optional().isBoolean().withMessage('isPrimary must be a boolean'),
   body('location.latitude').optional().isFloat({ min: -90, max: 90 }).withMessage('Invalid latitude'),
   body('location.longitude').optional().isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude'),
+  body('lat').optional().isFloat({ min: -90, max: 90 }).withMessage('Invalid latitude for map location'),
+  body('lng').optional().isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude for map location'),
+  body('mapLocation.lat').optional().isFloat({ min: -90, max: 90 }).withMessage('Invalid map location latitude'),
+  body('mapLocation.lng').optional().isFloat({ min: -180, max: 180 }).withMessage('Invalid map location longitude'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { firstName, lastName, address, city, state, zipCode, email, phone, isPrimary, location } = req.body;
+    const { firstName, lastName, address, city, state, zipCode, email, phone, isPrimary, location, lat, lng, mapLocation } = req.body;
     const userId = req.user.id;
 
     const session = await mongoose.startSession();
@@ -50,6 +54,9 @@ const addAddress = [
         email,
         phone,
         location: location || {},
+        lat: lat || null,
+        lng: lng || null,
+        mapLocation: mapLocation || null,
         isPrimary: isPrimary || false,
       };
 
@@ -82,15 +89,19 @@ const updateAddress = [
   body('state').optional().notEmpty().trim().withMessage('State cannot be empty'),
   body('zipCode').optional().matches(/^\d{5,6}$/).withMessage('ZIP code must be 5 or 6 digits'),
   body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required'),
-  body('phone').optional().matches(/^(?:\+91\s?)?\d{10}$/).withMessage('Phone number must be in international format (e.g., +12345678901)'),
+  body('phone').optional().matches(/^(?:\+91\s?)?[6-9]\d{9}$/).withMessage('Phone number must be in Indian format (e.g., +91 9876543210)'),
   body('isPrimary').optional().isBoolean().withMessage('isPrimary must be a boolean'),
   body('location.latitude').optional().isFloat({ min: -90, max: 90 }).withMessage('Invalid latitude'),
   body('location.longitude').optional().isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude'),
+  body('lat').optional().isFloat({ min: -90, max: 90 }).withMessage('Invalid latitude for map location'),
+  body('lng').optional().isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude for map location'),
+  body('mapLocation.lat').optional().isFloat({ min: -90, max: 90 }).withMessage('Invalid map location latitude'),
+  body('mapLocation.lng').optional().isFloat({ min: -180, max: 180 }).withMessage('Invalid map location longitude'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { firstName, lastName, address, city, state, zipCode, email, phone, isPrimary, location } = req.body;
+    const { firstName, lastName, address, city, state, zipCode, email, phone, isPrimary, location, lat, lng, mapLocation } = req.body;
     const addressId = parseInt(req.params.addressId);
     const userId = req.user.id;
 
@@ -120,6 +131,9 @@ const updateAddress = [
       if (email) targetAddress.email = email;
       if (phone) targetAddress.phone = phone;
       if (location) targetAddress.location = location;
+      if (lat !== undefined) targetAddress.lat = lat;
+      if (lng !== undefined) targetAddress.lng = lng;
+      if (mapLocation) targetAddress.mapLocation = mapLocation;
       if (isPrimary !== undefined) {
         if (isPrimary) {
           user.addresses.forEach(addr => (addr.isPrimary = false));

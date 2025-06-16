@@ -23,6 +23,12 @@ const userSchema = new mongoose.Schema({
       latitude: { type: Number },
       longitude: { type: Number },
     },
+    lat: { type: Number }, // New field for map-based latitude
+    lng: { type: Number }, // New field for map-based longitude
+    mapLocation: { // New field for map-based location
+      lat: { type: Number },
+      lng: { type: Number },
+    },
     isPrimary: { type: Boolean, default: false },
   }],
   name: { type: String },
@@ -37,7 +43,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String },
   createdAt: { type: Date, default: Date.now },
   joinedDate: { type: String, default: new Date().toISOString().split('T')[0] },
-  isVerified: { type: Boolean, default: false }, // New field for email verification
+  isVerified: { type: Boolean, default: false },
 });
 
 // Pre-save hook to generate id and computed fields
