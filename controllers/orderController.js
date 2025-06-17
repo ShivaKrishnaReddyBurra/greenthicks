@@ -125,7 +125,10 @@ const createOrder = [
           zipCode: address.zipCode,
           email: address.email,
           phone: address.phone,
-          location: address.location,
+          location: address.mapLocation ? {
+            latitude: address.mapLocation.lat,
+            longitude: address.mapLocation.lng,
+          } : { latitude: 0, longitude: 0 },
         },
         orderDate: new Date(),
       };
