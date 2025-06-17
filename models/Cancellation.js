@@ -1,70 +1,42 @@
 const mongoose = require("mongoose")
 
 const cancellationSchema = new mongoose.Schema({
-  order: {
-    type: mongoose.Schema.Types.ObjectId,
+  orderId: {
+    type: Number,
+    required: true,
     ref: "Order",
-    required: true,
   },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+  userId: {
+    type: Number,
     required: true,
+    ref: "User",
   },
   reason: {
     type: String,
     required: true,
   },
-  explanation: {
-    type: String,
-    required: true,
-  },
   status: {
     type: String,
-    enum: ["pending", "approved", "rejected"],
+    enum: ["pending", "approved", "rejected", "processed"],
     default: "pending",
+  },
+  requestDate: {
+    type: Date,
+    default: Date.now,
+  },
+  processedDate: {
+    type: Date,
+  },
+  orderTotal: {
+    type: Number,
+    required: true,
   },
   refundAmount: {
     type: Number,
+    required: true,
   },
-  refundStatus: {
+  adminNotes: {
     type: String,
-    enum: ["Pending Refund", "Refunded", "Not Applicable"],
-    default: "Pending Refund",
-  },
-  refundMethod: {
-    type: String,
-    enum: ["original", "cash", "store_credit"],
-  },
-  refundTransactionId: {
-    type: String,
-  },
-  refundInitiatedDate: {
-    type: Date,
-  },
-  refundDate: {
-    type: Date,
-  },
-  paymentId: {
-    type: String,
-  },
-  deliveryPersonId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-  deliveryNote: {
-    type: String,
-  },
-  processedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-  },
-  processedAt: {
-    type: Date,
-  },
-  refundProcessedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
   },
   createdAt: {
     type: Date,
@@ -74,12 +46,6 @@ const cancellationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-})
-
-// Update the updatedAt field before saving
-cancellationSchema.pre("save", function (next) {
-  this.updatedAt = new Date()
-  next()
 })
 
 module.exports = mongoose.model("Cancellation", cancellationSchema)
