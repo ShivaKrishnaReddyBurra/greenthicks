@@ -1,4 +1,5 @@
-const mongoose = require("mongoose")
+// models/ServiceArea.js
+const mongoose = require("mongoose");
 
 const serviceAreaSchema = new mongoose.Schema({
   name: {
@@ -34,15 +35,15 @@ const serviceAreaSchema = new mongoose.Schema({
     default: 0,
   },
   estimatedDeliveryTime: {
-    type: Number, // in minutes
-    default: 30,
+    type: String,
+    default: "30-45 minutes",
   },
   createdBy: {
-    type: String, // User globalId
+    type: String,
     required: true,
   },
   updatedBy: {
-    type: String, // User globalId
+    type: String,
   },
   createdAt: {
     type: Date,
@@ -82,16 +83,16 @@ const serviceAreaSchema = new mongoose.Schema({
   deliveryRadius: {
     type: Number,
     default: 5,
-    min: 0.1, // Minimum radius in km
-    max: 100, // Maximum radius in km
+    min: 0.1,
+    max: 100,
   },
   isActive: {
     type: Boolean,
     default: true,
   },
-})
+});
 
 // Create 2dsphere index for geospatial queries
-serviceAreaSchema.index({ geometry: "2dsphere" })
+serviceAreaSchema.index({ geometry: "2dsphere" });
 
-module.exports = mongoose.model("ServiceArea", serviceAreaSchema)
+module.exports = mongoose.model("ServiceArea", serviceAreaSchema);

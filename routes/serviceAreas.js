@@ -1,3 +1,4 @@
+// routes/serviceAreaRoutes.js
 const express = require("express");
 const router = express.Router();
 const authenticate = require("../middleware/authenticate");
@@ -9,31 +10,25 @@ const {
   updateServiceArea,
   deleteServiceArea,
   checkLocationInServiceArea,
-  getActiveServiceAreas
+  getActiveServiceAreas,
+  getServiceAreas, // New
+  checkPincode, // New
+  getNearbyServiceAreas, // New
 } = require("../controllers/serviceAreaController");
 
-// Get all service areas
+// Existing routes
 router.get("/", getAllServiceAreas);
-
-// Get service area by ID
 router.get("/:id", getServiceAreaById);
-
-// Get service area by pincode (for lookup)
 router.get("/pincode/:pincode", getServiceAreaByPincode);
-
-// Create a new service area (admin only)
 router.post("/", authenticate, createServiceArea);
-
-// Update a service area by ID (admin only)
 router.put("/:id", authenticate, updateServiceArea);
-
-// Delete a service area by ID (admin only)
 router.delete("/:id", authenticate, deleteServiceArea);
-
-// Check if a location is within any service area
 router.post("/check-location", checkLocationInServiceArea);
-
-// Get all active service areas (public)
 router.get("/active/all", getActiveServiceAreas);
+
+// New routes for frontend
+router.get("/service-areas", getServiceAreas); // Supports limit and active query params
+router.get("/check-pincode/:pincode", checkPincode); // Check pincode availability
+router.get("/nearby", getNearbyServiceAreas); // Get nearby service areas
 
 module.exports = router;

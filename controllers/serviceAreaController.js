@@ -1,4 +1,5 @@
-const { body, param, validationResult } = require("express-validator");
+// controllers/serviceAreaController.js
+const { body, param, query, validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 const ServiceArea = require("../models/ServiceArea");
 
@@ -72,7 +73,6 @@ const createServiceArea = [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    // Check if user is admin
     if (!req.user.isAdmin) {
       return res.status(403).json({ message: "Unauthorized: Admin access required" });
     }
@@ -92,13 +92,11 @@ const createServiceArea = [
         state,
       } = req.body;
 
-      // Create geometry from center location and radius
       let geometry = null;
       if (centerLocation && deliveryRadius) {
-        // Create a circular polygon approximation
         const points = [];
-        const radius = deliveryRadius * 1000; // Convert km to meters
-        const earthRadius = 6371000; // Earth radius in meters
+        const radius = deliveryRadius * 1000;
+        const earthRadius = 6371000;
 
         for (let i = 0; i < 32; i++) {
           const angle = (((i * 360) / 32) * Math.PI) / 180;
@@ -109,7 +107,7 @@ const createServiceArea = [
               Math.cos((centerLocation.lat * Math.PI) / 180);
           points.push([lng, lat]);
         }
-        points.push(points[0]); // Close the polygon
+        points.push(points[0]);
 
         geometry = {
           type: "Polygon",
@@ -162,7 +160,6 @@ const updateServiceArea = [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    // Check if user is admin
     if (!req.user.isAdmin) {
       return res.status(403).json({ message: "Unauthorized: Admin access required" });
     }
@@ -187,17 +184,15 @@ const updateServiceArea = [
         return res.status(404).json({ message: "Service area not found" });
       }
 
-      // Update fields if provided
       if (name) serviceArea.name = name;
       if (description !== undefined) serviceArea.description = description;
       if (centerLocation) serviceArea.centerLocation = centerLocation;
       if (deliveryRadius) {
         serviceArea.deliveryRadius = deliveryRadius;
-        // Update geometry if centerLocation or deliveryRadius is provided
         if (centerLocation || deliveryRadius) {
           const points = [];
-          const radius = deliveryRadius * 1000; // Convert km to meters
-          const earthRadius = 6371000; // Earth radius in meters
+          const radius = deliveryRadius * 1000;
+          const earthRadius = 6371000;
           const lat = centerLocation ? centerLocation.lat : serviceArea.centerLocation.lat;
           const lng = centerLocation ? centerLocation.lng : serviceArea.centerLocation.lng;
 
@@ -210,7 +205,7 @@ const updateServiceArea = [
                 Math.cos((lat * Math.PI) / 180);
             points.push([newLng, newLat]);
           }
-          points.push(points[0]); // Close the polygon
+          points.push(points[0]);
 
           serviceArea.geometry = {
             type: "Polygon",
@@ -245,7 +240,6 @@ const deleteServiceArea = [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    // Check if user is admin
     if (!req.user.isAdmin) {
       return res.status(403).json({ message: "Unauthorized: Admin access required" });
     }
@@ -277,10 +271,8 @@ const checkLocationInServiceArea = [
     const { location } = req.body;
 
     try {
-      // Check if any service areas exist
       const serviceAreasCount = await ServiceArea.countDocuments();
 
-      // If no service areas defined, allow all locations (for initial setup)
       if (serviceAreasCount === 0) {
         return res.json({
           isValid: true,
@@ -289,7 +281,6 @@ const checkLocationInServiceArea = [
         });
       }
 
-      // Find service areas that contain this point
       const point = {
         type: "Point",
         coordinates: [location.lng, location.lat],
@@ -341,6 +332,122 @@ const getActiveServiceAreas = async (req, res) => {
   }
 };
 
+// New endpoints for frontend
+
+// Get service areas with limit and active filter
+const getServiceAreas = [
+  query("limit").optional().isInt({ min: 1 }).withMessage("Limit must be a positive integer"),
+  query("active").optional().isBoolean().withMessage("Active must be a boolean"),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    try {
+      const { limit, active } = req.query;
+      let query = {};
+      if (active !== undefined) {
+        query.active = active === "true";
+      }
+      const serviceAreas = await ServiceArea.find(query)
+        .limit(parseInt(limit) || 100)
+        .select("name city state pincode centerLocation deliveryRadius deliveryFee estimatedDeliveryTime active");
+      res.json({ serviceAreas });
+    } catch (error) {
+      console.error("Get service areas error:", error.message);
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  },
+];
+
+// Check if a pincode is serviceable
+const checkPincode = [
+  param("pincode").notEmpty().trim().matches(/^\d{5,6}$/).withMessage("Pincode must be 5 or 6 digits"),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    try {
+      const { pincode } = req.params;
+      const serviceArea = await ServiceArea.findOne({ pincode, active: true });
+      if (!serviceArea) {
+        return res.json({
+          available: false,
+          message: "Sorry, we don't deliver to this pincode yet",
+        });
+      }
+      res.json({
+        available: true,
+        serviceArea: {
+          id: serviceArea._id,
+          name: serviceArea.name,
+          city: serviceArea.city,
+          state: serviceArea.state,
+          pincode: serviceArea.pincode,
+          centerLocation: serviceArea.centerLocation,
+          deliveryRadius: serviceArea.deliveryRadius,
+          deliveryFee: serviceArea.deliveryFee,
+          estimatedDeliveryTime: serviceArea.estimatedDeliveryTime,
+        },
+      });
+    } catch (error) {
+      console.error("Check pincode error:", error.message);
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  },
+];
+
+// Get nearby service areas based on coordinates
+const getNearbyServiceAreas = [
+  query("lat").isFloat({ min: -90, max: 90 }).withMessage("Invalid latitude"),
+  query("lng").isFloat({ min: -180, max: 180 }).withMessage("Invalid longitude"),
+  query("maxDistance").optional().isFloat({ min: 0 }).withMessage("Max distance must be a positive number"),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    try {
+      const { lat, lng, maxDistance } = req.query;
+      const maxDistanceMeters = (parseFloat(maxDistance) || 50) * 1000;
+
+      const nearbyServiceAreas = await ServiceArea.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [parseFloat(lng), parseFloat(lat)],
+            },
+            distanceField: "distance",
+            maxDistance: maxDistanceMeters,
+            spherical: true,
+            query: { active: true },
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            city: 1,
+            state: 1,
+            pincode: 1,
+            centerLocation: 1,
+            deliveryRadius: 1,
+            deliveryFee: 1,
+            estimatedDeliveryTime: 1,
+            distance: { $divide: ["$distance", 1000] },
+          },
+        },
+        {
+          $sort: { distance: 1 },
+        },
+      ]);
+
+      res.json({ nearbyServiceAreas });
+    } catch (error) {
+      console.error("Get nearby service areas error:", error.message);
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  },
+];
+
 module.exports = {
   getAllServiceAreas,
   getServiceAreaById,
@@ -350,4 +457,7 @@ module.exports = {
   deleteServiceArea,
   checkLocationInServiceArea,
   getActiveServiceAreas,
+  getServiceAreas,
+  checkPincode,
+  getNearbyServiceAreas,
 };

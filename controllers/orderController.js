@@ -72,7 +72,7 @@ const createOrder = [
           price: product.price,
           quantity: item.quantity,
           unit: product.unit,
-          image: product.images[0] || '',
+          image: product.images?.find((img) => img.primary)?.url || '',
         };
       });
 

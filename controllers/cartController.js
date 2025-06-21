@@ -44,7 +44,7 @@ const addToCart = [
           name: product.name,
           price: product.price,
           quantity,
-          image: product.images[0] || '',
+          image: product.images?.find((img) => img.primary)?.url || '',
         });
       }
 
