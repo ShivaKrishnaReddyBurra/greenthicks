@@ -38,7 +38,7 @@ const createOrder = [
         return res.status(400).json({ message: 'Address not found' });
       }
 
-      const serviceArea = await ServiceArea.findOne({ pincode: address.zipCode, isActive: true }).session(session);
+      const serviceArea = await ServiceArea.findOne({ pincode: address.zipCode, isActive: true,  }).session(session);
       if (!serviceArea) {
         await session.abortTransaction();
         return res.status(400).json({ message: 'Service not available in this area' });
@@ -76,7 +76,7 @@ const createOrder = [
         };
       });
 
-      const shipping = subtotal > 200 ? 0 : 25.99;
+      const shipping = subtotal > 299 ? 0 : (serviceArea.deliveryFee ?? 25);
       let discount = 0;
       let appliedCoupon = null;
       if (couponCode) {

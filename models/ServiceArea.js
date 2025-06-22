@@ -1,10 +1,8 @@
-// models/ServiceArea.js
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const serviceAreaSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
     trim: true,
   },
   description: {
@@ -15,14 +13,12 @@ const serviceAreaSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ["Polygon", "MultiPolygon"],
-      required: true,
     },
     coordinates: {
       type: Array,
-      required: true,
     },
   },
-  active: {
+  isActive: {
     type: Boolean,
     default: true,
   },
@@ -55,8 +51,8 @@ const serviceAreaSchema = new mongoose.Schema({
   pincode: {
     type: String,
     required: true,
-    unique: true,
     trim: true,
+    index: true,
   },
   city: {
     type: String,
@@ -86,13 +82,11 @@ const serviceAreaSchema = new mongoose.Schema({
     min: 0.1,
     max: 100,
   },
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-});
+})
 
-// Create 2dsphere index for geospatial queries
-serviceAreaSchema.index({ geometry: "2dsphere" });
+// Create indexes for performance
+serviceAreaSchema.index({ geometry: "2dsphere" })
+serviceAreaSchema.index({ centerLocation: "2dsphere" })
+serviceAreaSchema.index({ isActive: 1, pincode: 1 })
 
-module.exports = mongoose.model("ServiceArea", serviceAreaSchema);
+module.exports = mongoose.model("ServiceArea", serviceAreaSchema)
