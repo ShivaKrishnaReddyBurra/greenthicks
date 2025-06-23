@@ -58,8 +58,56 @@ const addToCart = [
     } finally {
       session.endSession();
     }
-  },
+  }
 ];
+
+const updateCart = async (req, res) => {
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  const { productId, quantity } = req.body;
+  const userId = req.user.id;
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const product = await Product.findOne({ globalId: productId }).session(session);
+    if (!product) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Product not found" });
+    }
+    if (product.stock < quantity) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: `Insufficient stock for ${product.name}. Available: ${product.stock}` });
+    }
+
+    const cart = await Cart.findOne({ userId }).session(session);
+    if (!cart) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    const itemIndex = cart.items.findIndex(item => item.productId === productId);
+    if (itemIndex === -1) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Item not found in cart" });
+    }
+
+    cart.items[itemIndex].quantity = quantity;
+    await cart.save({ session });
+
+    await session.commitTransaction();
+    res.status(200).json({ message: "Quantity updated successfully" });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error("Update cart error:", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  } finally {
+    session.endSession();
+  }
+};
 
 const removeFromCart = [
   param('productId').isInt({ min: 1 }).withMessage('Invalid product ID'),
@@ -98,7 +146,7 @@ const removeFromCart = [
     } finally {
       session.endSession();
     }
-  },
+  }
 ];
 
 const getCart = async (req, res) => {
@@ -141,4 +189,4 @@ const clearCart = async (req, res) => {
   }
 };
 
-module.exports = { addToCart, removeFromCart, getCart, clearCart };
+module.exports = { addToCart, removeFromCart, getCart, clearCart, updateCart };
