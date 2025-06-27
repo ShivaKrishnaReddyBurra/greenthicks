@@ -12,101 +12,151 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 5000,
 });
 
-const sendVerificationEmail = async (email, token) => {
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
-    const mailOptions = {
-      from: `"GreenThicks Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Welcome to GreenThicks! Confirm Your Email to Get Started',
-      text: `Thank you for signing up with GreenThicks! Please verify your email by clicking the link below to activate your account:\n${verificationLink}\n\nIf you didn’t sign up, feel free to ignore this email.\n\nHappy shopping,\nThe GreenThicks Team`,
-      html: `
-        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
-          <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
-            <tr>
-              <td>
-                <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.1);">
-                  <!-- Header -->
-                  <tr>
-                    <td>
-                      <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                        <tr>
-                          <td style="position: relative; padding: 0;">
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-image: url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=800&auto=format&fit=crop&q=80'); background-size: cover; background-position: center; height: 300px; position: relative;">
-                              <tr>
-                                <td style="position: relative;">
-                                  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.9));">
-                                    <tr>
-                                      <td style="padding: 40px 30px; text-align: center;">
-                                        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin: 0 auto 0px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-                                        <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Confirm Your Email</h1>
-                                        <p style="color: white; margin: 10px 0 0; font-size: 18px; opacity: 0.9;">One step to join GreenThicks</p>
-                                      </td>
-                                    </tr>
-                                  </table>
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                  <!-- Main Content -->
-                  <tr>
-                    <td style="padding: 40px 30px 20px 30px;">
-                      <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                        <tr>
-                          <td style="color: #333333; font-size: 16px; line-height: 24px;">
-                            <p style="margin-top: 0;">We're excited to have you join GreenThicks! Verify your email to start exploring our farm-fresh, organic produce delivered right to your door.</p>
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="text-align: center; margin: 30px 0;">
-                              <tr>
-                                <td>
-                                  <a href="${verificationLink}" style="background: linear-gradient(to right, #2ecc71, #27ae60); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); transition: all 0.3s ease;">Confirm Your Account</a>
-                                </td>
-                              </tr>
-                            </table>
-                            <p>If the button doesn’t work, copy and paste this link into your browser:</p>
-                            <p><a href="${verificationLink}" style="color: #27ae60; text-decoration: underline; word-break: break-all;">${verificationLink}</a></p>
-                            <p>This link will expire in 24 hours. If you didn’t sign up for GreenThicks, please ignore this email.</p>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background: linear-gradient(to right, #f9f9f9, #f0f0f0); padding: 20px; border-radius: 0 0 12px 12px;">
-                      <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                        <tr>
-                          <td align="center" style="color: #666666; font-size: 14px;">
-                            <p style="margin: 0 0 10px;">Happy shopping!<br>The GreenThicks Team</p>
-                            <div style="margin: 15px 0;">
-                              <a href="https://facebook.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733547.png" alt="Facebook" style="width: 28px; filter: grayscale(100%);"></a>
-                              <a href="https://x.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733579.png" alt="Twitter" style="width: 28px; filter: grayscale(100%);"></a>
-                              <a href="https://instagram.com/greenthickss" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/1384/1384063.png" alt="Instagram" style="width: 28px; filter: grayscale(100%);"></a>
-                              <a href="https://www.linkedin.com/company/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733561.png" alt="LinkedIn" style="width: 28px; filter: grayscale(100%);"></a>
-                            </div>
-                            <p style="margin: 0;">
-                              <a href="https://greenthicks.live" style="color: #27ae60; text-decoration: none; font-weight: 500;">Visit our website</a> | 
-                              <a href="mailto:greenthickss@gmail.com" style="color: #27ae60; text-decoration: none; font-weight: 500;">Contact Support</a>
-                            </p>
-                            <p style="margin: 10px 0 0; color: #888888;">© 2025 GreenThicks. All rights reserved.</p>
-                            <p style="margin: 5px 0 0; color: #888888; font-style: italic;">Fresh from Farm to Table</p>
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-      `,
-    };
-  
-    await transporter.sendMail(mailOptions);
+// Send Verification Email for Account Verification, Password Reset, Email Update, and Phone Update
+const sendVerificationEmail = async (email, token, type = 'account-verification') => {
+  let subject, verificationLink, headerText, subHeaderText, message, buttonText;
+
+  // Determine the type of verification and set appropriate subject, link, and content
+  switch (type) {
+    case 'account-verification':
+      subject = 'Welcome to GreenThicks! Confirm Your Email to Get Started';
+      verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+      headerText = 'Confirm Your Email';
+      subHeaderText = 'One step to join GreenThicks';
+      message = `We're excited to have you join GreenThicks! Verify your email to start exploring our farm-fresh, organic produce delivered right to your door. This link will expire in 24 hours. If you didn’t sign up for GreenThicks, please ignore this email.`;
+      buttonText = 'Confirm Your Account';
+      break;
+    case 'password-reset':
+      subject = 'Reset Your GreenThicks Password';
+      verificationLink = `${process.env.FRONTEND_URL}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+      headerText = 'Reset Your Password';
+      subHeaderText = 'Secure your account';
+      message = `You requested to reset your password. Click the button below to set a new password. This link will expire in 1 hour. If you didn’t initiate this request, please ignore this email or contact support.`;
+      buttonText = 'Reset Password';
+      break;
+    case 'email-update':
+      subject = 'Verify Your New Email Address';
+      verificationLink = `${process.env.FRONTEND_URL}/verify-email-update?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+      headerText = 'Verify Your New Email';
+      subHeaderText = 'Secure your account';
+      message = `You requested to update your email address. Click the button below to verify your new email. This link will expire in 24 hours. If you didn’t initiate this request, please ignore this email or contact support.`;
+      buttonText = 'Verify Email';
+      break;
+    case 'phone-update':
+      subject = 'Verify Your New Phone Number';
+      verificationLink = `${process.env.FRONTEND_URL}/verify-phone-update?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+      headerText = 'Verify Your New Phone Number';
+      subHeaderText = 'Secure your account';
+      message = `You requested to update your phone number. Click the button below to verify your new phone number. This link will expire in 24 hours. If you didn’t initiate this request, please ignore this email or contact support.`;
+      buttonText = 'Verify Phone';
+      break;
+    default:
+      throw new Error('Invalid verification type');
+  }
+
+  const mailOptions = {
+    from: `"GreenThicks Team" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: subject,
+    text: `${message.split('. ').slice(0, -1).join('. ')}.\n\n${verificationLink}\n\nHappy shopping,\nThe GreenThicks Team`,
+    html: `
+      <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; color: #333333;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 650px; margin: 20px auto;">
+          <tr>
+            <td>
+              <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.1);">
+                <!-- Header -->
+                <tr>
+                  <td>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="position: relative; padding: 0;">
+                          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-image: url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=800&auto=format&fit=crop&q=80'); background-size: cover; background-position: center; height: 300px; position: relative;">
+                            <tr>
+                              <td style="position: relative;">
+                                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.9));">
+                                  <tr>
+                                    <td style="padding: 40px 30px; text-align: center;">
+                                      <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mail_logo-7PdH4CLvM3N3aeqItNcDAhnEFKOK9Z.png" alt="GreenThicks Logo" width="150" style="display: block; margin: 0 auto 0px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                                      <h1 style="color: white; margin: 0; font-size: 32px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">${headerText}</h1>
+                                      <p style="color: white; margin: 10px 0 0; font-size: 18px; opacity: 0.9;">${subHeaderText}</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <!-- Main Content -->
+                <tr>
+                  <td style="padding: 40px 30px 20px 30px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="color: #333333; font-size: 16px; line-height: 24px;">
+                          <p style="margin-top: 0;">${message}</p>
+                          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="text-align: center; margin: 30px 0;">
+                            <tr>
+                              <td>
+                                <a href="${verificationLink}" style="background: linear-gradient(to right, #2ecc71, #27ae60); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); transition: all 0.3s ease;">${buttonText}</a>
+                              </td>
+                            </tr>
+                          </table>
+                          <p>If the button doesn’t work, copy and paste this link into your browser:</p>
+                          <p><a href="${verificationLink}" style="color: #27ae60; text-decoration: underline; word-break: break-all;">${verificationLink}</a></p>
+                          <p>This link will expire in ${type === 'password-reset' ? '1 hour' : '24 hours'}.</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <!-- Footer -->
+                <tr>
+                  <td style="background: linear-gradient(to right, #f9f9f9, #f0f0f0); padding: 20px; border-radius: 0 0 12px 12px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td align="center" style="color: #666666; font-size: 14px;">
+                          <p style="margin: 0 0 10px;">Happy shopping!<br>The GreenThicks Team</p>
+                          <div style="margin: 15px 0;">
+                            <a href="https://facebook.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733547.png" alt="Facebook" style="width: 28px; filter: grayscale(100%);"></a>
+                            <a href="https://x.com/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733579.png" alt="Twitter" style="width: 28px; filter: grayscale(100%);"></a>
+                            <a href="https://instagram.com/greenthickss" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/1384/1384063.png" alt="Instagram" style="width: 28px; filter: grayscale(100%);"></a>
+                            <a href="https://www.linkedin.com/company/greenthicks" style="display: inline-block; margin: 0 8px;"><img src="https://cdn-icons-png.flaticon.com/128/733/733561.png" alt="LinkedIn" style="width: 28px; filter: grayscale(100%);"></a>
+                          </div>
+                          <p style="margin: 0;">
+                            <a href="https://greenthicks.live" style="color: #27ae60; text-decoration: none; font-weight: 500;">Visit our website</a> | 
+                            <a href="mailto:greenthickss@gmail.com" style="color: #27ae60; text-decoration: none; font-weight: 500;">Contact Support</a>
+                          </p>
+                          <p style="margin: 10px 0 0; color: #888888;">© 2025 GreenThicks. All rights reserved.</p>
+                          <p style="margin: 5px 0 0; color: #888888; font-style: italic;">Fresh from Farm to Table</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    `,
   };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error(`Send ${type} email error:`, {
+      message: error.message,
+      stack: error.stack,
+      email,
+      type,
+    });
+    throw error;
+  }
+};
 
 const sendWelcomeEmail = async (email) => {
   const mailOptions = {

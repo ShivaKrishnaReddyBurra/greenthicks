@@ -109,49 +109,55 @@ const updateAddress = [
     session.startTransaction();
 
     try {
-      const user = await User.findOne({ globalId: userId }).session(session);
-      if (!user) {
-        await session.abortTransaction();
-        return res.status(404).json({ message: 'User not found' });
-      }
+  const user = await User.findOne({ globalId: userId }).session(session);
+  if (!user) {
+    await session.abortTransaction();
+    return res.status(404).json({ message: 'User not found' });
+  }
 
-      const targetAddress = user.addresses.find(addr => addr.addressId === addressId);
-      if (!targetAddress) {
-        await session.abortTransaction();
-        return res.status(404).json({ message: 'Address not found' });
-      }
+  const targetAddress = user.addresses.find(addr => addr.addressId === addressId);
+  if (!targetAddress) {
+    await session.abortTransaction();
+    return res.status(404).json({ message: 'Address not found' });
+  }
 
-      // Update fields if provided
-      if (firstName) targetAddress.firstName = firstName;
-      if (lastName) targetAddress.lastName = lastName;
-      if (address) targetAddress.address = address;
-      if (city) targetAddress.city = city;
-      if (state) targetAddress.state = state;
-      if (zipCode) targetAddress.zipCode = zipCode;
-      if (email) targetAddress.email = email;
-      if (phone) targetAddress.phone = phone;
-      if (location) targetAddress.location = location;
-      if (lat !== undefined) targetAddress.lat = lat;
-      if (lng !== undefined) targetAddress.lng = lng;
-      if (mapLocation) targetAddress.mapLocation = mapLocation;
-      if (isPrimary !== undefined) {
-        if (isPrimary) {
-          user.addresses.forEach(addr => (addr.isPrimary = false));
-          targetAddress.isPrimary = true;
-        } else {
-          targetAddress.isPrimary = false;
-        }
-      }
+  // Update fields if provided
+  if (firstName !== undefined && firstName !== '') targetAddress.firstName = firstName;
+  if (lastName !== undefined && lastName !== '') targetAddress.lastName = lastName;
+  if (address !== undefined && address !== '') targetAddress.address = address;
+  if (city !== undefined && city !== '') targetAddress.city = city;
+  if (state !== undefined && state !== '') targetAddress.state = state;
+  if (zipCode !== undefined && zipCode !== '') targetAddress.zipCode = zipCode;
+  if (email !== undefined && email !== '') targetAddress.email = email;
+  if (phone !== undefined && phone !== '') targetAddress.phone = phone;
+  if (location !== undefined) targetAddress.location = location;
+  if (lat !== undefined) targetAddress.lat = lat;
+  if (lng !== undefined) targetAddress.lng = lng;
+  if (mapLocation !== undefined) targetAddress.mapLocation = mapLocation;
+  if (isPrimary !== undefined) {
+    if (isPrimary) {
+      user.addresses.forEach(addr => (addr.isPrimary = false));
+      targetAddress.isPrimary = true;
+    } else {
+      targetAddress.isPrimary = false;
+    }
+  }
 
-      await user.save({ session });
+  await user.save({ session });
 
-      await session.commitTransaction();
-      res.json({ message: 'Address updated successfully', address: targetAddress });
-    } catch (error) {
-      await session.abortTransaction();
-      console.error('Update address error:', error.message);
-      res.status(500).json({ message: 'Server error', error: error.message });
-    } finally {
+  await session.commitTransaction();
+  res.json({ message: 'Address updated successfully', address: targetAddress });
+} catch (error) {
+  await session.abortTransaction();
+  console.error('Update address error:', {
+    message: error.message,
+    stack: error.stack,
+    userId,
+    addressId,
+    payload: req.body,
+  });
+  res.status(500).json({ message: 'Server error', error: error.message });
+} finally {
       session.endSession();
     }
   },
