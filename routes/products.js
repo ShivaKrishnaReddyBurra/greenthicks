@@ -31,6 +31,7 @@ router.delete("/:globalId", authenticate, deleteProduct)
 router.put("/:globalId/set-primary-image", authenticate, setPrimaryImage)
 router.delete("/:globalId/image", authenticate, deleteImage)
 router.patch("/:globalId/reviews/:reviewId", authenticate, updateReviewStatus)
+router.put("/:globalId/reviews/:reviewId", authenticate, updateReviewStatus)
 router.delete("/:globalId/reviews/:reviewId", authenticate, deleteReview)
 
 module.exports = router

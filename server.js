@@ -64,10 +64,11 @@ app.use(
       "http://localhost:3001",
     ].filter(Boolean),
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // ✅ PATCH added here
     allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"],
   }),
 )
+
 
   // Middleware setup
 app.use(express.json());
