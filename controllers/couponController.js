@@ -2,17 +2,24 @@ const { body, check, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 const Coupon = require('../models/Coupon');
 
+// Creating a new coupon
 const createCoupon = [
+  // Checking admin authorization
   (req, res, next) => {
     if (!req.user.isAdmin) return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     next();
   },
+  // Validating request body
   body('code').notEmpty().trim().withMessage('Coupon code is required'),
-  body('discountType').isIn(['percentage', 'fixed']).withMessage('Invalid discount type'),
-  body('discountValue').isFloat({ min: 0 }).withMessage('Discount value must be positive'),
+  body('discountType').isIn(['percentage', 'fixed', 'free_delivery']).withMessage('Invalid discount type'),
+  body('discountValue').custom((value, { req }) => {
+    if (req.body.discountType === 'free_delivery') return value === 0;
+    return value > 0;
+  }).withMessage('Discount value must be positive for percentage/fixed, or 0 for free delivery'),
   body('minimumOrderAmount').optional().isFloat({ min: 0 }).withMessage('Minimum order amount must be positive'),
   body('maxUses').optional().isInt({ min: 0 }).withMessage('Max uses must be non-negative'),
   body('expiryDate').isISO8601().withMessage('Invalid expiry date'),
+  // Handling coupon creation
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -32,7 +39,7 @@ const createCoupon = [
       const couponData = {
         code,
         discountType,
-        discountValue,
+        discountValue: discountType === 'free_delivery' ? 0 : discountValue,
         minimumOrderAmount: minimumOrderAmount || 0,
         maxUses: maxUses || 0,
         expiryDate,
@@ -53,23 +60,30 @@ const createCoupon = [
   },
 ];
 
+// Updating an existing coupon
 const updateCoupon = [
+  // Checking admin authorization
   (req, res, next) => {
     if (!req.user.isAdmin) return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     next();
   },
+  // Validating coupon ID and request body
   check('couponId').isInt({ min: 1 }).withMessage('Invalid coupon ID'),
-  body('discountType').optional().isIn(['percentage', 'fixed']).withMessage('Invalid discount type'),
-  body('discountValue').optional().isFloat({ min: 0 }).withMessage('Discount value must be positive'),
+  body('discountType').optional().isIn(['percentage', 'fixed', 'free_delivery']).withMessage('Invalid discount type'),
+  body('discountValue').optional().custom((value, { req }) => {
+    if (req.body.discountType === 'free_delivery') return value === 0;
+    return value > 0;
+  }).withMessage('Discount value must be positive for percentage/fixed, or 0 for free delivery'),
   body('minimumOrderAmount').optional().isFloat({ min: 0 }).withMessage('Minimum order amount must be positive'),
   body('maxUses').optional().isInt({ min: 0 }).withMessage('Max uses must be non-negative'),
   body('expiryDate').optional().isISO8601().withMessage('Invalid expiry date'),
   body('active').optional().isBoolean().withMessage('Active must be a boolean'),
+  // Handling coupon update
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { discountType, discountValue, minimumOrderAmount, maxUses, expiryDate, active } = req.body;
+    const { code, discountType, discountValue, minimumOrderAmount, maxUses, expiryDate, active } = req.body;
     const couponId = parseInt(req.params.couponId);
 
     const session = await mongoose.startSession();
@@ -82,8 +96,9 @@ const updateCoupon = [
         return res.status(404).json({ message: 'Coupon not found' });
       }
 
+      if (code) coupon.code = code.toUpperCase();
       if (discountType) coupon.discountType = discountType;
-      if (discountValue !== undefined) coupon.discountValue = discountValue;
+      if (discountValue !== undefined) coupon.discountValue = discountType === 'free_delivery' ? 0 : discountValue;
       if (minimumOrderAmount !== undefined) coupon.minimumOrderAmount = minimumOrderAmount;
       if (maxUses !== undefined) coupon.maxUses = maxUses;
       if (expiryDate) coupon.expiryDate = expiryDate;
@@ -102,12 +117,16 @@ const updateCoupon = [
   },
 ];
 
+// Deleting a coupon
 const deleteCoupon = [
+  // Checking admin authorization
   (req, res, next) => {
     if (!req.user.isAdmin) return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     next();
   },
+  // Validating coupon ID
   check('couponId').isInt({ min: 1 }).withMessage('Invalid coupon ID'),
+  // Handling coupon deletion
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -137,11 +156,14 @@ const deleteCoupon = [
   },
 ];
 
+// Retrieving all coupons
 const getCoupons = [
+  // Checking admin authorization
   (req, res, next) => {
     if (!req.user.isAdmin) return res.status(403).json({ message: 'Unauthorized: Admin access required' });
     next();
   },
+  // Handling coupons retrieval
   async (req, res) => {
     try {
       const coupons = await Coupon.find().sort({ createdAt: -1 });
@@ -153,9 +175,12 @@ const getCoupons = [
   },
 ];
 
+// Validating a coupon
 const validateCoupon = [
+  // Validating request body
   body('code').notEmpty().trim().withMessage('Coupon code is required'),
   body('subtotal').isFloat({ min: 0 }).withMessage('Subtotal must be positive'),
+  // Handling coupon validation
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -177,11 +202,22 @@ const validateCoupon = [
         return res.status(400).json({ message: 'Coupon usage limit reached' });
       }
 
-      const discount = coupon.discountType === 'percentage'
-        ? subtotal * (coupon.discountValue / 100)
-        : coupon.discountValue;
+      let discount = 0;
+      if (coupon.discountType === 'percentage') {
+        discount = subtotal * (coupon.discountValue / 100);
+      } else if (coupon.discountType === 'fixed') {
+        discount = coupon.discountValue;
+      } else if (coupon.discountType === 'free_delivery') {
+        discount = 0; // Free delivery coupons don't affect subtotal directly
+      }
 
-      res.json({ message: 'Coupon valid', discount });
+res.json({ 
+  message: 'Coupon valid',
+  discountType: coupon.discountType,
+  discountValue: coupon.discountValue,
+  discount,
+  isFreeDelivery: coupon.discountType === 'free_delivery'
+});
     } catch (error) {
       console.error('Validate coupon error:', error.message);
       res.status(500).json({ message: 'Server error', error: error.message });

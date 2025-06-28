@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
 const Counter = require('./Counter');
 
+// Defining the coupon schema
 const couponSchema = new mongoose.Schema({
   globalId: { type: Number, unique: true, required: true },
   code: { type: String, required: true, unique: true, uppercase: true },
-  discountType: { type: String, required: true, enum: ['percentage', 'fixed'] },
+  discountType: { type: String, required: true, enum: ['percentage', 'fixed', 'free_delivery'] },
   discountValue: { type: Number, required: true, min: 0 },
   minimumOrderAmount: { type: Number, default: 0, min: 0 },
   maxUses: { type: Number, default: 0, min: 0 }, // 0 means unlimited
@@ -15,7 +16,7 @@ const couponSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-// Static method to create a new coupon with globalId
+// Creating a new coupon with globalId
 couponSchema.statics.createNewCoupon = async function(couponData, session) {
   try {
     // Generate globalId from counter
@@ -50,7 +51,7 @@ couponSchema.statics.createNewCoupon = async function(couponData, session) {
   }
 };
 
-// Pre-save hook for updating fields
+// Updating fields before saving
 couponSchema.pre('save', function(next) {
   this.updatedAt = new Date();
   if (this.isNew) {

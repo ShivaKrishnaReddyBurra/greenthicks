@@ -76,28 +76,39 @@ const createOrder = [
         };
       });
 
-      const shipping = subtotal > 299 ? 0 : (serviceArea.deliveryFee ?? 25);
-      let discount = 0;
-      let appliedCoupon = null;
-      if (couponCode) {
-        const coupon = await Coupon.findOne({ code: couponCode.toLowerCase(), active: true }).session(session);
-        if (!coupon || coupon.expiryDate < new Date()) {
-          await session.abortTransaction();
-          return res.status(400).json({ message: 'Invalid or expired coupon code' });
-        }
-        if (coupon.minimumOrderAmount > subtotal) {
-          await session.abortTransaction();
-          return res.status(400).json({ message: `Minimum order amount for coupon is ${coupon.minimumOrderAmount}` });
-        }
-        if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses) {
-          await session.abortTransaction();
-          return res.status(400).json({ message: 'Coupon usage limit reached' });
-        }
-        discount = coupon.discountType === 'percentage'
-          ? subtotal * (coupon.discountValue / 100)
-          : coupon.discountValue;
-        appliedCoupon = coupon;
-      }
+let shipping = subtotal > 299 ? 0 : (serviceArea.deliveryFee ?? 25);
+let isFreeShipping = false;
+
+let discount = 0;
+let appliedCoupon = null;
+
+if (couponCode) {
+  const coupon = await Coupon.findOne({ code: couponCode.toLowerCase(), active: true }).session(session);
+  if (!coupon || coupon.expiryDate < new Date()) {
+    await session.abortTransaction();
+    return res.status(400).json({ message: 'Invalid or expired coupon code' });
+  }
+  if (coupon.minimumOrderAmount > subtotal) {
+    await session.abortTransaction();
+    return res.status(400).json({ message: `Minimum order amount for coupon is ${coupon.minimumOrderAmount}` });
+  }
+  if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses) {
+    await session.abortTransaction();
+    return res.status(400).json({ message: 'Coupon usage limit reached' });
+  }
+
+  if (coupon.discountType === 'percentage') {
+    discount = subtotal * (coupon.discountValue / 100);
+  } else if (coupon.discountType === 'fixed') {
+    discount = coupon.discountValue;
+  } else if (coupon.discountType === 'free_delivery') {
+    shipping = 0; // ✅ override shipping
+    isFreeShipping = true; // ✅ track for frontend
+  }
+
+  appliedCoupon = coupon;
+}
+
       const total = subtotal + shipping - discount;
 
       await Counter.findOneAndUpdate(
@@ -159,7 +170,11 @@ const createOrder = [
       await notifyOnOrderPlaced(order, session);
 
       await session.commitTransaction();
-      res.status(201).json({ message: 'Order created successfully', order });
+      res.status(201).json({
+  message: 'Order created successfully',
+  order,
+  isFreeShipping,
+});
     } catch (error) {
       await session.abortTransaction();
       console.error('Create order error:', error.message);
@@ -231,7 +246,7 @@ const cancelOrder = [
       await notifyOnOrderCancelled(order, session);
 
       await session.commitTransaction();
-      res.json({ message: 'Order cancelled successfully', order });
+      res.status(201).json({ message: 'Order created successfully', order, isFreeShipping });
     } catch (error) {
       await session.abortTransaction();
       console.error('Cancel order error:', error.message);
