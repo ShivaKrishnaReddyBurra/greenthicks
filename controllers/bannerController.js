@@ -20,7 +20,6 @@ const uploadToAzure = async (buffer, filename, mimetype) => {
   return blockBlobClient.url;
 };
 
-// Configure multer for file uploads
 const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
@@ -34,27 +33,27 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
-// Get banner images by type
 const getBannerImages = async (req, res) => {
   try {
-    const { type = "desktop" } = req.query;
-    const { admin } = req.query;
+    console.log("Raw query:", req.query); // Log raw query
+    const { type = "desktop", showInactive } = req.query;
+    console.log("Parsed params:", { type, showInactive });
 
     let banners;
-    if (admin === "true") {
+    if (showInactive === "true") {
       banners = await BannerImage.getAllByType(type);
     } else {
       banners = await BannerImage.getActiveByType(type);
     }
+    console.log("Fetched banners:", banners);
 
-    // Use Azure URLs directly
     const bannersWithUrls = banners.map((banner) => ({
       ...banner.toObject(),
-      imageUrl: banner.imageUrl, // Use the stored Azure URL
+      imageUrl: banner.imageUrl,
     }));
 
     res.json({
@@ -72,7 +71,6 @@ const getBannerImages = async (req, res) => {
   }
 };
 
-// Create new banner image
 const createBannerImage = async (req, res) => {
   try {
     const { title, altText, link, type, isActive, order } = req.body;
@@ -84,19 +82,17 @@ const createBannerImage = async (req, res) => {
       });
     }
 
-    // Process image with Sharp
     const width = type === "mobile" ? 600 : 1200;
     const height = type === "mobile" ? 150 : 300;
 
     const optimizedBuffer = await sharp(req.file.buffer)
       .resize(width, height, {
-        fit: "contain", // Preserve aspect ratio
-        background: { r: 255, g: 255, b: 255 }, // White background for padding
+        fit: "contain",
+        background: { r: 255, g: 255, b: 255 },
       })
       .jpeg({ quality: 85 })
       .toBuffer();
 
-    // Upload to Azure
     const uniqueName = `banner-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
     const azureUrl = await uploadToAzure(optimizedBuffer, uniqueName, "image/jpeg");
 
@@ -131,7 +127,6 @@ const createBannerImage = async (req, res) => {
   }
 };
 
-// Update banner image
 const updateBannerImage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -145,7 +140,6 @@ const updateBannerImage = async (req, res) => {
       });
     }
 
-    // Update fields
     if (title !== undefined) banner.title = title;
     if (altText !== undefined) banner.altText = altText;
     if (link !== undefined) banner.link = link;
@@ -153,21 +147,18 @@ const updateBannerImage = async (req, res) => {
     if (isActive !== undefined) banner.isActive = isActive !== "false";
     if (order !== undefined) banner.order = Number.parseInt(order) || 0;
 
-    // Handle new image upload
     if (req.file) {
-      // Process new image
       const width = type === "mobile" ? 600 : 1200;
       const height = type === "mobile" ? 150 : 300;
 
       const optimizedBuffer = await sharp(req.file.buffer)
         .resize(width, height, {
-          fit: "contain", // Preserve aspect ratio
+          fit: "contain",
           background: { r: 255, g: 255, b: 255 },
         })
         .jpeg({ quality: 85 })
         .toBuffer();
 
-      // Upload new image to Azure
       const uniqueName = `banner-${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
       const azureUrl = await uploadToAzure(optimizedBuffer, uniqueName, "image/jpeg");
       banner.imageUrl = azureUrl;
@@ -180,7 +171,7 @@ const updateBannerImage = async (req, res) => {
       message: "Banner image updated successfully",
       banner: {
         ...banner.toObject(),
-        imageUrl: banner.imageUrl, // Use Azure URL
+        imageUrl: banner.imageUrl,
       },
     });
   } catch (error) {
@@ -193,7 +184,6 @@ const updateBannerImage = async (req, res) => {
   }
 };
 
-// Delete banner image
 const deleteBannerImage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -206,7 +196,6 @@ const deleteBannerImage = async (req, res) => {
       });
     }
 
-    // Note: Azure Blob deletion is not implemented here. Add if needed.
     await BannerImage.findByIdAndDelete(id);
 
     res.json({
@@ -223,7 +212,6 @@ const deleteBannerImage = async (req, res) => {
   }
 };
 
-// Reorder banner images
 const reorderBannerImages = async (req, res) => {
   try {
     const { orderUpdates } = req.body;
@@ -255,7 +243,6 @@ const reorderBannerImages = async (req, res) => {
   }
 };
 
-// Get single banner image
 const getBannerImage = async (req, res) => {
   try {
     const { id } = req.params;
@@ -272,7 +259,7 @@ const getBannerImage = async (req, res) => {
       success: true,
       banner: {
         ...banner.toObject(),
-        imageUrl: banner.imageUrl, // Use Azure URL
+        imageUrl: banner.imageUrl,
       },
     });
   } catch (error) {
