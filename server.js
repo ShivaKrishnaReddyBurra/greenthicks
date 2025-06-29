@@ -1,27 +1,29 @@
-const express = require("express");
-const cors = require("cors");
-const connectDB = require("./config/db");
-const passport = require("./config/passport");
-const authRoutes = require("./routes/auth");
-const productRoutes = require("./routes/products");
-const orderRoutes = require("./routes/orders");
-const cartRoutes = require("./routes/cart");
-const addressRoutes = require("./routes/addresses");
-const couponRoutes = require("./routes/coupons");
-const invoiceRoutes = require("./routes/invoices");
-const deliveryRoutes = require("./routes/delivery");
-const serviceAreaRoutes = require("./routes/serviceAreas");
-const favoritesRoutes = require("./routes/favorites");
-const adminRoutes = require("./routes/admin");
-const adminNotificationsRoutes = require("./routes/adminNotifications");
-const adminSettingsRoutes = require("./routes/adminSettings");
-const cancellationsRoutes = require("./routes/cancellations");
-const returnsRoutes = require("./routes/returns");
-const usersRoutes = require("./routes/users"); // Added to address MODULE_NOT_FOUND
+const express = require("express")
+const cors = require("cors")
+const connectDB = require("./config/db")
+const passport = require("./config/passport")
+const authRoutes = require("./routes/auth")
+const productRoutes = require("./routes/products")
+const orderRoutes = require("./routes/orders")
+const cartRoutes = require("./routes/cart")
+const addressRoutes = require("./routes/addresses")
+const couponRoutes = require("./routes/coupons")
+const invoiceRoutes = require("./routes/invoices")
+const deliveryRoutes = require("./routes/delivery")
+const serviceAreaRoutes = require("./routes/serviceAreas")
+const favoritesRoutes = require("./routes/favorites")
+const adminRoutes = require("./routes/admin")
+const adminNotificationsRoutes = require("./routes/adminNotifications")
+const adminSettingsRoutes = require("./routes/adminSettings")
+const cancellationsRoutes = require("./routes/cancellations")
+const returnsRoutes = require("./routes/returns")
+const usersRoutes = require("./routes/users") // Added to address MODULE_NOT_FOUND
+const bannerRoutes = require("./routes/banners") // Added line
+const path = require("path") // Added line for path module
 
-require("dotenv").config();
+require("dotenv").config()
 
-const app = express();
+const app = express()
 
 // Environment variables validation
 console.log("🔍 Checking environment variables...")
@@ -64,17 +66,16 @@ app.use(
       "http://localhost:3001",
     ].filter(Boolean),
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // ✅ PATCH added here
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-auth-token"],
   }),
 )
 
+// Middleware setup
+app.use(express.json())
+app.use(passport.initialize())
 
-  // Middleware setup
-app.use(express.json());
-app.use(passport.initialize());
-
-connectDB();
+connectDB()
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -101,28 +102,31 @@ app.get("/api/greenthicks", (req, res) => {
   })
 })
 
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/addresses", addressRoutes);
-app.use("/api/coupons", couponRoutes);
-app.use("/api/invoices", invoiceRoutes);
-app.use("/api/delivery", deliveryRoutes);
-app.use("/api/service-areas", serviceAreaRoutes);
-app.use("/api/favorites", favoritesRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/admin/notifications", adminNotificationsRoutes);
-app.use("/api/admin/settings", adminSettingsRoutes);
-app.use("/api/cancellations", cancellationsRoutes);
-app.use("/api/returns", returnsRoutes);
-app.use("/api/users", usersRoutes); // Added users route
-app.use("/api/delivery-map", require("./routes/deliveryMap"));
-app.use("/api/delivery-dashboard", require("./routes/deliveryDashboard"));
-app.use("/api/delivery-profile", require("./routes/deliveryProfile"));
-app.use("/api/delivery-settings", require("./routes/deliverySettings"));
-app.use("/api/delivery-admin", require("./routes/deliveryAdmin"));
+app.use("/api/auth", authRoutes)
+app.use("/api/products", productRoutes)
+app.use("/api/orders", orderRoutes)
+app.use("/api/cart", cartRoutes)
+app.use("/api/addresses", addressRoutes)
+app.use("/api/coupons", couponRoutes)
+app.use("/api/invoices", invoiceRoutes)
+app.use("/api/delivery", deliveryRoutes)
+app.use("/api/service-areas", serviceAreaRoutes)
+app.use("/api/favorites", favoritesRoutes)
+app.use("/api/admin", adminRoutes)
+app.use("/api/admin/notifications", adminNotificationsRoutes)
+app.use("/api/admin/settings", adminSettingsRoutes)
+app.use("/api/cancellations", cancellationsRoutes)
+app.use("/api/returns", returnsRoutes)
+app.use("/api/users", usersRoutes) // Added users route
+app.use("/api/banners", bannerRoutes) // Added line
+app.use("/api/delivery-map", require("./routes/deliveryMap"))
+app.use("/api/delivery-dashboard", require("./routes/deliveryDashboard"))
+app.use("/api/delivery-profile", require("./routes/deliveryProfile"))
+app.use("/api/delivery-settings", require("./routes/deliverySettings"))
+app.use("/api/delivery-admin", require("./routes/deliveryAdmin"))
 
+// Serve static files for uploaded images
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))) // Added line
 
 // Routes with error handling
 const routes = [
@@ -142,6 +146,7 @@ const routes = [
   { path: "/api/cancellations", module: cancellationsRoutes, name: "Cancellations" },
   { path: "/api/returns", module: returnsRoutes, name: "Returns" },
   { path: "/api/users", module: usersRoutes, name: "Users" },
+  { path: "/api/banners", module: bannerRoutes, name: "Banners" }, // Added line
 ]
 
 // Load core routes
@@ -212,8 +217,8 @@ app.use("*", (req, res) => {
 })
 
 app.get("/api/greenthicks", (req, res) => {
-  res.json({ message: "API is working" });
-});
+  res.json({ message: "API is working" })
+})
 
 // Start server
 const PORT = process.env.PORT || 5000
